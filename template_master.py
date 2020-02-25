@@ -88,7 +88,7 @@ import copy
 
 def is_string(match, string):
   groups = match.groups()
-  if not len(groups) or groups[0] != string : return False
+  if not len(groups) or groups[0].strip() != string : return False
   return True
 
 def find_groups(match, regexp):
@@ -119,7 +119,7 @@ def is_var(match):
   string = match.groups()[0]
   string_replace = string.replace(" ", "")
   try:
-    print string_replace, string_replace[0] == "%", string_replace[-1] == "%"
+    # print string_replace, string_replace[0] == "%", string_replace[-1] == "%"
     if string_replace[0] == "%" and string_replace[-1] == "%" :
       if len(string_replace[1:-1].strip().split(" ")) == 1: return string_replace[1:-1].strip(), True
   except : pass
@@ -169,7 +169,7 @@ def find_pairs(f_start, f_end, matchs_list):
           i_end = i
           break
     if not i_end : 
-      print "WARNING : find_pairs() : no end for this start : ", match_start.groups()[0]
+      print "template_master.py : WARNING : find_pairs() : no end for this start : ", match_start.groups()[0]
       continue
 
     match_end = matchs_list[i_end]
@@ -194,7 +194,7 @@ def find_triples(f_start, f_middle, f_end, matchs_list):
           i_end      = i
           break
     if not i_end : 
-      print "WARNING : find_pairs() : no end for this start : ", match_start.groups()[0]
+      print "template_master.py : WARNING : find_pairs() : no end for this start : ", match_start.groups()[0]
       continue
     match_end = matchs_list[i_end]
 
@@ -233,7 +233,7 @@ def expand_key(key, dic, call = True):
 
   for method_key in method_keys:
     if not hasattr(var, method_key) : 
-      print "WARNING : parce_template() : class " + var_key + " hasn't attribute with name " + method_key
+      print "template_master.py : WARNING : parce_template() : class " + var_key + " hasn't attribute with name " + method_key
       return NO_KEY_CODE
 
     attr = getattr(var, method_key)
@@ -262,6 +262,8 @@ def parce_template(template, dic):
     nsubtemplates += [subtemplate]
   if len(matchs_list): nsubtemplates += [ntemplate [matchs_list[-1].end() : ]]
   else : return ntemplate
+
+  # print_mathcs( matchs_list )
 
   # work with for
   # find for loops and endfor pairs
@@ -425,7 +427,7 @@ def parce_template(template, dic):
     if func == NO_KEY_CODE : continue
 
     if not callable(func) :
-      print "WARNING: parce_template() : func '" + func_key + "' should be callable"
+      print "template_master.py : WARNING: parce_template() : func '" + func_key + "' should be callable"
       continue
 
     params = []
