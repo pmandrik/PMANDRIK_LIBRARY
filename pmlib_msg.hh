@@ -1,7 +1,7 @@
  
 
-#ifndef MSG_HH
-#define MSG_HH 1
+#ifndef PMLIB_MSG_HH
+#define PMLIB_MSG_HH 1
 
 #include<iostream> 
 #include<string>
@@ -80,17 +80,17 @@ namespace pmlib{
     VERBOSE
   };
 
-  #define MSG_ERROR(...) if(verbose_lvl >= shta::verbose::ERROR)   msg_err(__VA_ARGS__)
-  #define MSG_WARNING(...) if(verbose_lvl >= shta::verbose::WARNING) msg_err(__VA_ARGS__)
-  #define MSG_INFO(...) if(verbose_lvl >= shta::verbose::INFO)    msg(__VA_ARGS__)
-  #define MSG_DEBUG(...) if(verbose_lvl >= shta::verbose::DEBUG)   msg(__VA_ARGS__)
-  #define MSG_VERBOSE(...) if(verbose_lvl >= shta::verbose::VERBOSE) msg(__VA_ARGS__)
+  #define MSG_ERROR(...) if(verbose_lvl >= pmlib::verbose::ERROR)   msg_err(__VA_ARGS__)
+  #define MSG_WARNING(...) if(verbose_lvl >= pmlib::verbose::WARNING) msg_err(__VA_ARGS__)
+  #define MSG_INFO(...) if(verbose_lvl >= pmlib::verbose::INFO)    msg(__VA_ARGS__)
+  #define MSG_DEBUG(...) if(verbose_lvl >= pmlib::verbose::DEBUG)   msg(__VA_ARGS__)
+  #define MSG_VERBOSE(...) if(verbose_lvl >= pmlib::verbose::VERBOSE) msg(__VA_ARGS__)
 
-  #define MSG_ERROR_NLL(...) if(verbose_lvl >= shta::verbose::ERROR)   msg_err_nll(__VA_ARGS__)
-  #define MSG_WARNING_NLL(...) if(verbose_lvl >= shta::verbose::WARNING) msg_err_nll(__VA_ARGS__)
-  #define MSG_INFO_NLL(...) if(verbose_lvl >= shta::verbose::INFO)    msg_nll(__VA_ARGS__)
-  #define MSG_DEBUG_NLL(...) if(verbose_lvl >= shta::verbose::DEBUG)   msg_nll(__VA_ARGS__)
-  #define MSG_VERBOSE_NLL(...) if(verbose_lvl >= shta::verbose::VERBOSE) msg_nll(__VA_ARGS__)
+  #define MSG_ERROR_NLL(...) if(verbose_lvl >= pmlib::verbose::ERROR)   msg_err_nll(__VA_ARGS__)
+  #define MSG_WARNING_NLL(...) if(verbose_lvl >= pmlib::verbose::WARNING) msg_err_nll(__VA_ARGS__)
+  #define MSG_INFO_NLL(...) if(verbose_lvl >= pmlib::verbose::INFO)    msg_nll(__VA_ARGS__)
+  #define MSG_DEBUG_NLL(...) if(verbose_lvl >= pmlib::verbose::DEBUG)   msg_nll(__VA_ARGS__)
+  #define MSG_VERBOSE_NLL(...) if(verbose_lvl >= pmlib::verbose::VERBOSE) msg_nll(__VA_ARGS__)
 
   // ======= msg progress  ==================================================================== 
   void msg_progress(double progress, int barWidth = 50){
