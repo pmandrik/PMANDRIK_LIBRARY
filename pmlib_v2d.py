@@ -50,12 +50,10 @@ class v2():
     self.y -= val.y
 
   def __mul__(self, val):
-    self.x *= val
-    self.y *= val
+    return v2(self.x * val, self.y * val)
 
   def __div__(self, val):
-    self.x /= val
-    self.y /= val
+    return v2(self.x / val, self.y / val)
 
   def __add__ (self, other):
     return v2(self.x + other.x, self.y + other.y)
