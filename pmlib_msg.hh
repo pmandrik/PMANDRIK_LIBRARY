@@ -12,7 +12,7 @@
 #include<string>
 #include<vector>
 
-namespace pmlib{
+namespace pm {
 
   // ======= print helpers ====================================================================
   template<typename T> void print_simple_vector(const std::vector <T> & v, std::string separator = "\n"){
