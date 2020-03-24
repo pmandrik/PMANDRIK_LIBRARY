@@ -137,7 +137,7 @@ namespace pm {
     std::cout << std::string(total_spaces/2, ' ');
   }
 
-  void print_as_table(const std::vector< std::vector<std::string> > & items, const int & max_total_width, const int & graphic_mode = 0){
+  void print_as_table(const std::vector< std::vector<std::string> > & items, const int & max_total_width = 150, const int & graphic_mode = 0){
     if(not items.size()) return;
 
     std::string separator = "|";
