@@ -191,7 +191,7 @@ namespace pm {
     std::cout << std::endl << std::string(total_width, '-') << std::endl;
 
     // print other parts of the table
-    for(int y = 0; y < Ny; y++){
+    for(int y = 1; y < Ny; y++){
       const std::vector<std::string> & line = items[y];
       for(int x = 0; x < Nx; x++)
         print_table_item(line[x], std::max(column_widthes[x], 2), separator, reduction_symbol);
