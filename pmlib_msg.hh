@@ -144,12 +144,16 @@ namespace pm {
     std::string reduction_symbol = "$";
     if(graphic_mode == 1){}; // TODO
 
-    int Nx = items.size();
-    int Ny = items.at(0).size();
+    int Ny = items.size();
+    int Nx = items.at(0).size();
 
     vector<int> column_widthes = vector<int>(Nx, 0);
     for(int y = 0; y < Ny; y++){
       const std::vector<std::string> & line = items[y];
+      if(line.size() != Nx){
+        msg_err("pm::print_as_table(): different line sizes", Nx, line.size(), "for line", y);
+        return;
+      }
       for(int x = 0; x < Nx; x++)
         column_widthes[x] = std::max((int)line[x].size(), column_widthes[x]);
     }
@@ -159,7 +163,6 @@ namespace pm {
       column_widthes[x] += 3; // add separators and spaces
       total_width += column_widthes[x];
     }
-
     if(total_width > max_total_width){
       vector<int> column_widthes_delta = column_widthes;
       int sum_resized_column_widthes = 0;
@@ -169,7 +172,6 @@ namespace pm {
         column_widthes_delta[x] -= column_widthes[x];
         sum_resized_column_widthes += column_widthes[x];
       }
-
       int extra_space = max(0, max_total_width - sum_resized_column_widthes);
       while( extra_space ){
         std::vector<int>::iterator max_element_it = std::max_element(column_widthes_delta.begin(), column_widthes_delta.end());
