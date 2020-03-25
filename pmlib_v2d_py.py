@@ -20,6 +20,12 @@ class v2():
   def Rotated(self, angle):
     return self.Rotate(angle * PI_180)
 
+  def Max(self):
+    return max(self.x, self.y)
+
+  def Min(self):
+    return min(self.x, self.y)
+
   def L(self):
     return hypot(self.x, self.y)
 
@@ -88,6 +94,7 @@ class v2():
     return "v2(" + str(self.x) + ", " + str(self.y)
 
   def __len__(self):
+    print "THIS"
     return 2
 
   def __getitem__(self, key):
