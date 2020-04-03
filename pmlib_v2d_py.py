@@ -49,10 +49,12 @@ class v2():
   def __imul__(self, val):
     self.x *= val
     self.y *= val
+    return self
 
   def __idiv__(self, val):
     self.x /= val
     self.y /= val
+    return self
 
   def __iadd__(self, val):
     self.x += val.x
@@ -91,7 +93,7 @@ class v2():
     return v2(-self.x, -self.y)
 
   def __str__(self):
-    return "v2(" + str(self.x) + ", " + str(self.y)
+    return "v2(" + str(self.x) + ", " + str(self.y) + ")"
 
   def __len__(self):
     return 2

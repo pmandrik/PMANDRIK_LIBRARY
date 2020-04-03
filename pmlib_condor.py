@@ -1,6 +1,22 @@
 
 from pmlib_decors import *
 
+import os
+
+CONDOR_TEMPLATE="""
+executable            = %(EXE_NAME)s
+arguments             = $(ClusterID) $(ProcId)
+output                = %(JOB_NAME)s.$(ClusterId).$(ProcId).out
+error                 = %(JOB_NAME)s.$(ClusterId).$(ProcId).err
+log                   = %(JOB_NAME)s.$(ClusterId).log
+
+requirements          = (OpSysAndVer =?= "CentOS7")
+
++JobFlavour           = \"%(JOB_FLAVOUR)s\"
+
+queue
+"""
+
 ### class to submite and control condor jobs 
 class CondorCluster():
   def __init__(self, options = {}):
@@ -25,8 +41,36 @@ class CondorCluster():
     self.max_retries = 3
     self.sleep_time  = 30
 
-  def create_default_job(self):
-    pass # TODO
+    self.job_ids = []
+
+  def create_condor_cfg(self, options={}, template=CONDOR_TEMPLATE):
+    # https://twiki.cern.ch/twiki/bin/view/ABPComputing/LxbatchHTCondor
+    espresso 	20min 	8nm
+    microcentury 	1h 	1nh
+    longlunch 	2h 	8nh
+    workday 	8h 	1nd
+    tomorrow 	1d 	2nd
+    testmatch 	3d 	1nw
+    nextweek 	1w 	2nw 
+    req_options = ["EXE_NAME", "JOB_NAME", "JOB_FLAVOUR", "CONDOR_CFG_NAME"]
+    for value in req_options:
+      if value in options.keys(): continue
+      print value, "is requred to be in provided options, abort job creation"
+      if value == "JOB_FLAVOUR":
+      print """possible values are:
+espresso 	20min
+microcentury 	1h 	
+longlunch 	2h 
+workday 	8h 
+tomorrow 	1d 
+testmatch 	3d
+nextweek 	1w """
+      
+      return
+    condor_tmp = template % dic
+    f = open(  dic["CONDOR_CFG_NAME"], "w")
+    f.write( condor_tmp )
+    f.close()
 
   @multiple_try(self.max_retries, self.sleep_time)
   def submit_job(self, job_file):
@@ -43,8 +87,9 @@ class CondorCluster():
     try:
       id = pat.search(output).groups()[0]
     except:
-    raise ClusterManagmentError, 'fail to submit to the cluster: \n%s' \
-                                                                        % output 
+      raise ClusterManagmentError, 'fail to submit to the cluster: \n%s'  % output 
+
+    self.job_ids += [ id ]
     return id
 
   def get_status(self, status):
@@ -112,11 +157,11 @@ class CondorCluster():
       return idle, running, fail, finished
 
   def wait_jobs(self):
-    ### Wait that all job are finish.
+    ### Wait that all job are finished
     idle_prev, running_prev = 0, 0
     iters_since_last_update = 0
     while True : 
-      idle, running, fail, finished = check_jobs( job_ids )
+      idle, running, fail, finished = check_jobs( self.job_ids )
       if idle + run == 0:
         break
 
@@ -133,10 +178,44 @@ class CondorCluster():
         time.sleep( time_to_sleep )
       except KeyboardInterrupt:
         pass
-      
 
 def pmlib_condor_tests():
-  pass
+  def create_test_exe( fname, options ):
+    text = """#!/bin/bash
+
+echo "hello, it is test script for condor!"
+
+sdir=%(SCRIPT_DIRECTORY)s
+wdir=`pwd`
+
+cp $sdir/test_exe_input.txt  $wdir/test_exe_input.txt
+cat test_exe_input.txt > test_exe_output.txt
+cp $wdir/test_exe_output.txt $sdir/test_exe_output.txt
+
+ls -lathr
+
+echo "done!"
+
+exit 0
+"""
+
+    f = open( fname, "w" )
+    f.write( text % options )
+    f.close()
+
+    f = open( "test_exe_input.txt", "w" )
+    f.write( "kvarki kvarki kvarki" )
+    f.close()
+
+  cond = CondorCluster()
+  options = { "EXE_NAME" : "test_exe.sh", "JOB_NAME" : "test_condor_job", "JOB_FLAVOUR" : "espresso", "CONDOR_CFG_NAME" : "test_condor_cfg.txt" }
+  options[ "SCRIPT_DIRECTORY" : os.getcwd() ]
+  create_test_exe( options )
+
+  return 
+  cond.create_condor_cfg( options )
+  cond.submit_job( options["CONDOR_CFG_NAME"] )
+  cond.wait_jobs()
 
 if __name__ == "__main__": pmlib_condor_tests()
 
