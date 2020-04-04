@@ -2,6 +2,11 @@
 from pmlib_decors import *
 
 import os
+import subprocess
+import re
+
+MAX_RETRIES = 3
+SLEEP_TIME  = 30
 
 CONDOR_TEMPLATE="""
 executable            = %(EXE_NAME)s
@@ -38,26 +43,20 @@ class CondorCluster():
     self.status_map[6] =	"Submission_err"
 
     self.max_jobs_per_request = 50
-    self.max_retries = 3
-    self.sleep_time  = 30
+    self.max_retries = MAX_RETRIES
+    self.sleep_time  = SLEEP_TIME
 
     self.job_ids = []
+    self.verbose = True
 
   def create_condor_cfg(self, options={}, template=CONDOR_TEMPLATE):
     # https://twiki.cern.ch/twiki/bin/view/ABPComputing/LxbatchHTCondor
-    espresso 	20min 	8nm
-    microcentury 	1h 	1nh
-    longlunch 	2h 	8nh
-    workday 	8h 	1nd
-    tomorrow 	1d 	2nd
-    testmatch 	3d 	1nw
-    nextweek 	1w 	2nw 
     req_options = ["EXE_NAME", "JOB_NAME", "JOB_FLAVOUR", "CONDOR_CFG_NAME"]
     for value in req_options:
       if value in options.keys(): continue
       print value, "is requred to be in provided options, abort job creation"
       if value == "JOB_FLAVOUR":
-      print """possible values are:
+        print """possible values are:
 espresso 	20min
 microcentury 	1h 	
 longlunch 	2h 
@@ -67,18 +66,19 @@ testmatch 	3d
 nextweek 	1w """
       
       return
-    condor_tmp = template % dic
-    f = open(  dic["CONDOR_CFG_NAME"], "w")
+    condor_tmp = template % options
+    f = open(  options["CONDOR_CFG_NAME"], "w")
     f.write( condor_tmp )
     f.close()
 
-  @multiple_try(self.max_retries, self.sleep_time)
+  @multiple_try(MAX_RETRIES, SLEEP_TIME)
   def submit_job(self, job_file):
     f = open(job_file)
     job_text = f.read()
 
     a = subprocess.Popen(['condor_submit'], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
     output, _ = a.communicate( job_text )
+    if self.verbose : print output
     #output = a.stdout.read()
     #Submitting job(s).
     #Logging submit event(s).
@@ -93,7 +93,7 @@ nextweek 	1w """
     return id
 
   def get_status(self, status):
-    if not self.status_map.has_key[ status ] : return status
+    if not self.status_map.has_key( status ) : return status
     return self.status_map[ status ]
 
   def query(self, ids, requested_attributes=[], lim=-1):
@@ -104,7 +104,7 @@ nextweek 	1w """
     q = self.schedd.query(constraint='stringListmember(string(ClusterId),"{0}")'.format(",".join(str(id) for id in ids)), attr_list=requested_attributes, limit=lim)
     return q
 
-  @multiple_try(self.max_retries, self.sleep_time)
+  @multiple_try(MAX_RETRIES, SLEEP_TIME)
   def check_job(self, id):
     q = self.query([str(id)], ["JobStatus", "HoldReason"], lim=1)
     try:
@@ -120,18 +120,18 @@ nextweek 	1w """
 
     return status
 
-  @multiple_try(self.max_retries, self.sleep_time)
+  # @multiple_try(MAX_RETRIES, SLEEP_TIME)
   def check_jobs(self, job_ids):
-    status_counter = fromkeys( self.status_map.values(), 100 )
+    status_counter = dict.fromkeys( self.status_map.values(), 0 )
     ongoing_jobs = []
 
     for i in range( 1 + (len(job_ids) - 1) / self.max_jobs_per_request ):
       start = i * self.max_jobs_per_request
-      stop = min( (i+1) * packet, len(job_ids))
+      stop = min( (i+1) * self.max_jobs_per_request, len(job_ids))
       results = self.query(job_ids[start:stop], ["ClusterId", "JobStatus", "HoldReason"])
 
       for job_result in results:
-        id, status = job["ClusterId"], self.get_status( job["JobStatus"] )
+        id, status = job_result["ClusterId"], self.get_status( job_result["JobStatus"] )
 
         ongoing_jobs.append( id )
         status_counter[status] += 1
@@ -140,30 +140,24 @@ nextweek 	1w """
           hold_reason = q[0]["HoldReason"]
           print "CondorCluster.check_jobs(): ClusterId %s held with HoldReason: %s" % (str(id), hold_reason)
 
-        for id in list(self.submitted_ids):
-            if int(id) not in ongoing:
-                status = self.check_termination(id)
-                if status == 'wait':
-                    run += 1
-                elif status == 'resubmit':
-                    idle += 1
-
       idle     = status_counter["Idle"] + status_counter["Unexpanded"]
       running  = status_counter["Running"]
       fail     = status_counter["Held"]
       finished = status_counter["Completed"]
 
-      print "CondorCluster.check_jobs(): %s idle, %s running, %s failed, %s finished jobs ..." % (idle, running, fail, finished)
-      return idle, running, fail, finished
+    ids = [ int(id) for id in job_ids ]
+    ids = set(ids).difference(ongoing_jobs)
+    finished += len( ids ) #TODO add status checking
+      
+    return idle, running, fail, finished
 
   def wait_jobs(self):
     ### Wait that all job are finished
     idle_prev, running_prev = 0, 0
     iters_since_last_update = 0
+    time_to_sleep = self.sleep_time
     while True : 
-      idle, running, fail, finished = check_jobs( self.job_ids )
-      if idle + run == 0:
-        break
+      idle, running, fail, finished = self.check_jobs( self.job_ids )
 
       time_to_sleep = self.sleep_time
       if idle == idle_prev and running == running_prev:
@@ -171,16 +165,17 @@ nextweek 	1w """
         time_to_sleep = min( self.sleep_time * iters_since_last_update, self.sleep_time * 10 )
       else : 
         iters_since_last_update = 0
-        cummulative_time_to_check += time_to_sleep
 
-      num_of_updates += 1
+      print "CondorCluster.wait_jobs(): %s idle, %s running, %s failed, %s finished jobs ... wait %s sec " % (idle, running, fail, finished, time_to_sleep)
+      if idle + running == 0: break
+      idle_prev, running_prev = idle, running
       try:
         time.sleep( time_to_sleep )
       except KeyboardInterrupt:
         pass
 
 def pmlib_condor_tests():
-  def create_test_exe( fname, options ):
+  def create_test_exe( options ):
     text = """#!/bin/bash
 
 echo "hello, it is test script for condor!"
@@ -199,7 +194,7 @@ echo "done!"
 exit 0
 """
 
-    f = open( fname, "w" )
+    f = open( options["EXE_NAME"], "w" )
     f.write( text % options )
     f.close()
 
@@ -209,12 +204,12 @@ exit 0
 
   cond = CondorCluster()
   options = { "EXE_NAME" : "test_exe.sh", "JOB_NAME" : "test_condor_job", "JOB_FLAVOUR" : "espresso", "CONDOR_CFG_NAME" : "test_condor_cfg.txt" }
-  options[ "SCRIPT_DIRECTORY" : os.getcwd() ]
+  options[ "SCRIPT_DIRECTORY" ] = os.getcwd()
   create_test_exe( options )
 
-  return 
   cond.create_condor_cfg( options )
   cond.submit_job( options["CONDOR_CFG_NAME"] )
+
   cond.wait_jobs()
 
 if __name__ == "__main__": pmlib_condor_tests()
