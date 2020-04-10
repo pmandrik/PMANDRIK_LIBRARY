@@ -5,6 +5,8 @@
 ##  Version     :     1.0
 #############################################################################
 
+import random
+
 class Timer():
   def __init__(self, max_time, n_beats_max=0):
     self.imax = max_time
@@ -17,6 +19,10 @@ class Timer():
       self.Tick = self.TickNTimes
       self.n_beats_max = n_beats_max
       self.n_beats     = 0
+
+  def Rand(self):
+    self.itime = random.randrange(0, self.imax)
+    self.ftime = float(self.itime)/float(self.imax)
 
   def Reset(self):
     self.itime = 0

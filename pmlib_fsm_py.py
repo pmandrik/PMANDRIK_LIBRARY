@@ -80,7 +80,7 @@ class FSM():
 
 class FSM_test_class():
   def __init__(self):
-    self.name = "QWERTYQWERTYQWERTYQWERTYQWERTYQWERTYQWERTY"
+    self.name = "qwertyqwertyqwertyqwertyqwertyqwertyqwertyqwerty"
 
     self.fsm = FSM()
 
