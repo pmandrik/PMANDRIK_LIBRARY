@@ -10,6 +10,8 @@
 
 #include "pmlib_const.hh"
 
+#include <ostream>
+
 namespace pm {
   
   // ======= v2 =====================================================================================================
@@ -52,11 +54,11 @@ namespace pm {
   bool operator == (v2 va, v2 vb){return ((va.x == vb.x) and (va.y == vb.y));}
   bool operator != (v2 va, v2 vb){return ((va.x != vb.x) or (va.y != vb.y));}
 
-  ostream & operator << (ostream & out, v2 v){return out << "v2(" << v.x << "," << v.y << ")";};
+  std::ostream & operator << (std::ostream & out, v2 v){return out << "v2(" << v.x << "," << v.y << ")";}
 
   // ======= v3 =====================================================================================================
 
-};
+}
 
 #endif
 
