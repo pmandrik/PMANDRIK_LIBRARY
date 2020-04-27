@@ -9,65 +9,106 @@ from pmlib_timer_py import *
 from copy import deepcopy
 
 class State():
-  def __init__(self, name):
+  def __init__(self, name, tick_f, begin_f = None, end_f = None):
     self.name = name
-    self.tick       = None
-    self.tick_end   = None
-    self.tick_begin = None
-    self.options    = None
+    self.tick  = tick_f
+    self.end   = end_f
+    self.begin = begin_f
+    self.options = None
 
     self.done   = False
     self.remove_on_time = True;
     self.timer = None
+    self.remove_mark = False
 
 class FSM():
-  def __init__(self):
+  def __init__(self) : 
     self.active_states = []
+    self.active_states_names = {}
     self.states = {}
     self.states_to_delete = []
     self.states_to_add    = []
+    self.owner = None
+    
+  def GetNActiveStates(self, name) : 
+    if name in self.active_states_names:
+      return self.active_states_names[ name ]
+    return -1
 
-  def AddStateDefinition(self, name, state):
-    self.states[name] = state
+  def AddStateDefinition(self, state) : 
+    self.states[ state.name ] = state
+    self.active_states_names[ state.name ] = 0
+    
+  def NewState(self, name, tick_f, begin_f = None, end_f = None) : 
+    state = State( name, tick_f, begin_f, end_f )
+    self.AddStateDefinition( state )
+    return state
 
-  def AddState(self, state_name, tick_time = 0, remove_on_time = False, call_begin = True):
-    if not self.states.has_key( state_name ) :
+  def AddState(self, state_name, tick_time = 0, remove_on_time = False, call_begin = True) : 
+    if not state_name in self.states :
       raise "errro" # FIXME
 
     state = deepcopy( self.states[ state_name ] )
     state.done   = False
     state.remove_on_time = remove_on_time
     if tick_time : state.timer = Timer(tick_time, 1)
-    if not call_begin : state.tick_begin = None
+    if not call_begin : state.begin = None
     self.states_to_add += [ state ]
 
-  def RemoveState(self, state_name, call_end = True):
+  def RemoveState(self, state_name, call_end = True) : 
     state = None
     for state_candidate in self.active_states:
+      if state_candidate.remove_mark : continue
       if state_candidate.name != state_name: continue
       state = state_candidate
       break
-    if not state    : 
-      raise "error" #FIXME
-    if not call_end : state.tick_end = None
+    if not state    : return
+  
+    print "GOINT TO REMOVE STATE", state.name
+    print self.active_states_names
+    self.active_states_names[ state.name ] -= 1
+    if self.active_states_names[ state.name ] < 0:
+      self.active_states_names[ state.name ] = 0
+      print "FSM.RemoveState(): going to remove", state_name, "multiple times, ignore" 
+      return
+    
+    print self.active_states_names
+    if not call_end : state.end = None
+    state.remove_mark = True
     self.states_to_delete += [ state ]
+    
+  def SwitchState(self, state_name, new_state_name, call_end = True, tick_time = 0, remove_on_time = False, call_begin = True) : 
+    self.RemoveState( state_name, call_end )
+    self.AddState( new_state_name, tick_time, remove_on_time, call_begin )
 
-  def Tick(self):
+  def Tick(self) : 
     for state in self.states_to_delete:
-      if state.tick_end : state.tick_end( self, state )
+      if state.end : state.end( self.owner, self, state )
+      #print self.active_states_names
+      #print "remove state", state.name, self.owner.id
+      # self.Print()
       self.active_states.remove( state )
     self.states_to_delete = []
 
     for state in self.active_states:
-      state.tick( self, state )
+      ### check if state in turned off during this loop by another state
+      if state.remove_mark :
+        if state.end : state.end( self.owner, self, state )
+        state.end = None
+        continue # no more Tick() for this state
+      ### Tick
+      if state.tick : state.tick( self.owner, self, state )
       if state.timer :
         state.timer.Tick()
         if state.remove_on_time and state.timer.done : state.done = True
       if state.done : 
+        self.active_states_names[ state.name ] -= 1
+        state.remove_mark = True
         self.states_to_delete += [ state ]
 
     for state in self.states_to_add:
-      if state.tick_begin : state.tick_begin( self, state )
+      if state.begin : state.begin( self.owner, self, state )
+      self.active_states_names[ state.name ] += 1
     self.active_states += self.states_to_add
     self.states_to_add = []
 
@@ -86,14 +127,14 @@ class FSM_test_class():
 
     state_work = State("work")
     state_work.tick     = lambda fsm, state: self.tick_work(fsm, state)
-    state_work.tick_end = lambda fsm, state: fsm.AddState( "relax" )
+    state_work.end = lambda fsm, state: fsm.AddState( "relax" )
 
     state_relax = State("relax")
     state_relax.tick = lambda fsm, state: self.tick_relax(fsm, state)
-    state_relax.tick_end = lambda fsm, state: fsm.AddState( "work" )
+    state_relax.end = lambda fsm, state: fsm.AddState( "work" )
 
-    self.fsm.AddStateDefinition("work", state_work)
-    self.fsm.AddStateDefinition("relax", state_relax)
+    self.fsm.AddStateDefinition(state_work)
+    self.fsm.AddStateDefinition(state_relax)
 
     self.fsm.AddState("work")
 

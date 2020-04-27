@@ -21,6 +21,7 @@ namespace pm {
     public:
     virtual int GetNumberOfConnections(void) const;
     virtual int GetConnectionAt(const int & index) const;
+    virtual float RealDistance(const GraphPoint & other) const;
     virtual float EmpiricDistance(const GraphPoint & other) const;
   };
 
@@ -74,14 +75,16 @@ namespace pm {
         const int & id = graph_point.GetConnectionAt(i);
         std::map<int, AstarData*>::iterator it_closed = close_list.find(id);
         if( it_closed != close_list.end() ) continue;
-        float distance_to_end = point_end.EmpiricDistance(graph_points.at(id));
         std::map<int, AstarData*>::iterator it_prev = open_list.find(id);
+        float distance_to_start = checked_point->distance_to_start + graph_point.RealDistance( graph_points.at( id ) );
         if( it_prev != open_list.end() ){
-          if( it_prev->second->distance_to_start > checked_point->distance_to_start + 1 ){
+          if( it_prev->second->distance_to_start > distance_to_start ){
               it_prev->second->father = checked_point;
-              it_prev->second->distance_to_start = checked_point->distance_to_start + 1;
+              it_prev->second->distance_to_start = distance_to_start;
             }
-        } else open_list[ id ] = new AstarData( checked_point, id, distance_to_end, checked_point->distance_to_start + 1 );
+        } else{
+          open_list[ id ] = new AstarData( checked_point, id, point_end.EmpiricDistance(graph_points.at(id)), distance_to_start );
+        }
         
         if(id == end_index) goto find_end_mark;
       }
