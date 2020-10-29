@@ -147,13 +147,89 @@ namespace pm {
   
   
   
-  
-  
-  
-  
-  
-  
+  // draw brasil discrete limits
+  class BrasilDrawer{
+    public:
+    vector<string> names;
+    vector<float> s2_ds, s1_ds, cs, s1_us, s2_us, obss;
+    void AddPoint(string name, float s2_d, float s1_d, float c, float s1_u, float s2_u, float obs){
+      names.push_back( name );
+      s2_ds.push_back( s2_d );
+      s1_ds.push_back( s1_d );
+      cs.push_back( c );
+      s1_us.push_back( s1_u );
+      s2_us.push_back( s2_u ); 
+      obss.push_back( obs );
+    }
+    
+    TH1D* GetHist(string name, const vector<float> & values){
+      TH1D* h = new TH1D(name.c_str(), name.c_str(), values.size(), 0, values.size());
+      for(int i = 0; i < values.size(); i++){
+        h->Fill( names.at(i).c_str(), values.at( i ) );
+      }
+      return h;
+    }
+    
+    TH1D* GetHistErrors(string name, const vector<float> & v1, const vector<float> & v2){
+      TH1D* h = new TH1D(name.c_str(), name.c_str(), v1.size(), 0, v2.size());
+      for(int i = 0; i < v1.size(); i++){
+        float c = (v1.at(i) + v2.at(i) ) / 2.;
+        h->Fill( names.at(i).c_str(), c );
+        h->SetBinError( i+1, TMath::Abs(c - v1.at(i)) );
+      }
+      return h;
+    }
+    
+    TCanvas * Draw( bool draw_observed ){
+      TH1D* h_c = GetHist("Expected 95% C.L.", cs);
+      TH1D* h_s1 = GetHistErrors("#pm#sigma", s1_us, s1_ds);
+      TH1D* h_s2 = GetHistErrors("#pm2#sigma", s2_us, s2_ds);
+      
+      TCanvas * canv = new TCanvas("Brasil", "Brasil", 640, 480);
+      h_s2->Draw();
+      h_s1->Draw("same");
+      h_c->Draw("same");
+      return canv;
+    }
+  };
   
 };
+
+void pmlib_root_hist_drawer(){
+  TH1F *h = new TH1F("h","",10,0,10);
+
+  h->SetLineColor(kRed);
+
+  for(int i=0; i<9; i++){
+    for(int j = 0; j < 100; j++) h->Fill(i,10 * i);
+  }
+
+  /*try this first, you
+    see it will fill the 
+    whole histogram with
+    blue*/
+  h->Draw("E2");
+  //h->Draw("hist same");
+  
+
+  /*if i instead try the opposite
+    I get back to where I was 
+    where the whole histogram is filled*/
+  //h->DrawCopy("hist"); 
+  h->SetFillColor(kBlue);
+  //h->SetFillStyle(3018);
+  //h->Draw("e2same");
+ 
+
+  /*then try this instead,
+    you see only the error band is 
+    blue, and this is what I want
+    but in addition
+    I want the line of the histogram 
+    showing, but this just 
+    gives me the two cases above*/
+  //h->Draw("e2");
+
+  }
 
 #endif
