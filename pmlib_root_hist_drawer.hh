@@ -25,6 +25,9 @@ namespace pm {
     if(mode == "diff percent" or mode == "diff"){
       cen->Add(central, -1);
     }
+    if(mode == "")             cen->GetYaxis()->SetTitle("N");
+    if(mode == "diff percent") cen->GetYaxis()->SetTitle("(N_{sys} - N)/N");
+    if(mode == "diff")         cen->GetYaxis()->SetTitle("N_{sys} - N");
     cen->Draw("hist");
     double min = cen->GetMinimum();
     double max = cen->GetMaximum();
@@ -40,12 +43,15 @@ namespace pm {
         hre->Add( central, -1. );
       }
       if(mode == "diff percent"){
+        cout << hist->GetTitle() << endl;
         for(int j = 1; j <= central->GetNbinsX(); j++ ){
           float central_bin_value = central->GetBinContent(j);
-          if(central_bin_value > 0.00000000001){
+          if( TMath::Abs(central_bin_value) > 0.0000001){
             hre->SetBinContent(j, 100. * hre->GetBinContent(j) / central_bin_value );
+            cout << 100. * hre->GetBinContent(j) / central_bin_value << " " << hre->GetBinContent(j) << " " << central_bin_value << endl;
           }
-          else hre->SetBinContent(j, 100. * hre->GetBinContent(j) / TMath::Abs( hre->GetBinContent(j) ) );
+          else if( TMath::Abs( hre->GetBinContent(j) ) > 0.0000001 ) hre->SetBinContent(j, 100. * hre->GetBinContent(j) / TMath::Abs( hre->GetBinContent(j) ) );
+          else hre->SetBinContent(j, 0 );
         }
       }
       hre->Draw("hist same");
