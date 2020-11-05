@@ -10,6 +10,100 @@
 
 namespace pm {
 
+  class CanvasStyle {
+    public:
+      CanvasStyle(){
+        style_index = 0;
+      }
+
+      void SetStyle(){
+        if(style_index == 0){
+          int font = 132;
+          gStyle->SetFrameBorderMode(0);
+          gStyle->SetCanvasBorderMode(0);
+          gStyle->SetPadBorderMode(0);
+
+          gStyle->SetFrameFillColor(0);
+          gStyle->SetFrameFillStyle(0);
+
+          gStyle->SetPadColor(0);
+          gStyle->SetCanvasColor(0);
+          gStyle->SetTitleColor(1);
+          gStyle->SetStatColor(0);
+
+          gStyle->SetLegendBorderSize(0);
+          gStyle->SetLegendFillColor(0);
+          gStyle->SetLegendFont(font);
+          
+          gStyle->SetOptStat(0000000);
+          gStyle->SetTextFont(font);
+          gStyle->SetTextSize(0.05);
+          gStyle->SetLabelFont(font,"XYZ");
+          gStyle->SetTitleFont(font,"XYZ");
+          gStyle->SetLabelSize(0.05,"XYZ"); //0.035
+          gStyle->SetTitleSize(0.05,"XYZ");
+          
+          gStyle->SetTitleOffset(1.25,"X");
+          gStyle->SetTitleOffset(2.05,"Y");
+          gStyle->SetLabelOffset(0.02,"XY");
+          
+          // use bold lines and markers
+          gStyle->SetMarkerStyle(8);
+          gStyle->SetHistLineWidth(3);
+          gStyle->SetLineWidth(1);
+
+          gStyle->SetNdivisions(510,"xy");
+
+          // do not display any of the standard histogram decorations
+          gStyle->SetOptTitle(0);
+          gStyle->SetOptStat(0); //("m")
+          gStyle->SetOptFit(0);
+          
+          //gStyle->SetPalette(1,0)
+          gStyle->cd();
+          gROOT->ForceStyle();
+        }
+      }
+
+      void SetStyleHist(TH1 * hist){
+        if(style_index == 0){
+          cout << "111" << endl;
+          hist->GetYaxis()->CenterTitle();
+          hist->GetYaxis()->SetNdivisions(510);
+
+          hist->GetYaxis()->SetLabelFont(132);
+          hist->GetYaxis()->SetLabelOffset(0.02);
+          hist->GetYaxis()->SetLabelSize(0.04);
+          hist->GetYaxis()->SetTitleFont(132);
+          hist->GetYaxis()->SetTitleOffset(1.5);
+          hist->GetYaxis()->SetTitleSize(0.045);
+
+          hist->GetXaxis()->SetLabelFont(132);
+          hist->GetXaxis()->SetLabelOffset(0.02);
+          hist->GetXaxis()->SetLabelSize(0.06);
+          hist->GetXaxis()->SetTitleFont(132);
+          hist->GetXaxis()->SetTitleOffset(1.5);
+          hist->GetXaxis()->SetTitleSize(0.045);
+          hist->SetStats(false);
+
+          gStyle->SetOptTitle(0);
+          gStyle->SetOptStat(0); //("m")
+          gStyle->SetOptFit(0);
+        }
+      }
+
+      void SetStyleCanvas(TCanvas * canvas){
+        if(style_index == 0){
+          canvas->SetRightMargin(0.10);
+          canvas->SetLeftMargin(0.20);
+          canvas->SetBottomMargin(0.18);
+          canvas->SetTopMargin(0.12);
+        }
+      }
+
+      int style_index;
+  };
+
   void set_minmax_from_hist(double & min, double & max, TH1* hist){
     if( min > hist->GetMinimum() ) min = hist->GetMinimum();
     if( max < hist->GetMaximum() ) max = hist->GetMaximum();
@@ -152,6 +246,13 @@ namespace pm {
     public:
     vector<string> names;
     vector<float> s2_ds, s1_ds, cs, s1_us, s2_us, obss;
+    CanvasStyle * style;
+    string label_y, label_x, right_text_src, left_text_src;
+      
+    BrasilDrawer(){
+      style = nullptr;
+    }
+
     void AddPoint(string name, float s2_d, float s1_d, float c, float s1_u, float s2_u, float obs){
       names.push_back( name );
       s2_ds.push_back( s2_d );
@@ -184,11 +285,64 @@ namespace pm {
       TH1D* h_c = GetHist("Expected 95% C.L.", cs);
       TH1D* h_s1 = GetHistErrors("#pm#sigma", s1_us, s1_ds);
       TH1D* h_s2 = GetHistErrors("#pm2#sigma", s2_us, s2_ds);
-      
+
+      double maxh_v = -1.0;
+      double minh_v = -1.0;
+      vector<TH1D*> hists = {h_c, h_s1, h_s2};
+      for(TH1D * hist : hists){
+        maxh_v = TMath::Max(maxh_v, hist->GetBinContent(hist->GetMaximumBin()));
+        minh_v = TMath::Min(minh_v, hist->GetBinContent(hist->GetMinimumBin()));
+      }
+
+      for(TH1D * hist : hists){
+        hist->SetMaximum( 3.5 * maxh_v );
+        hist->SetMinimum( 1.5 * minh_v );
+      }
+
       TCanvas * canv = new TCanvas("Brasil", "Brasil", 640, 480);
-      h_s2->Draw();
-      h_s1->Draw("same");
-      h_c->Draw("same");
+      if(style){
+        style->SetStyle();
+        style->SetStyleCanvas(  canv );
+        for(TH1D * hist : hists){
+          style->SetStyleHist(hist);
+          hist->GetYaxis()->SetTitle( label_y.c_str() );
+          hist->GetXaxis()->SetTitle( label_x.c_str() );
+        }
+      }
+      
+      h_s2->Draw("E2");
+      h_s1->Draw("E2 same");
+      h_c->Draw("hist same");
+      h_c->SetLineWidth(2);
+
+      h_s1->SetFillColor(kGreen);
+      h_s2->SetFillColor(kYellow);
+      h_c->SetLineStyle(2);
+
+      TLegend * legend = new TLegend(0.55,0.65,0.90,0.88);
+      legend->SetFillColor(0);
+      legend->SetFillStyle(3001);
+      legend->SetLineColor(0);
+      legend->SetTextFont(132) ;
+      legend->AddEntry(h_c, "Expected 95% C.L.", "l");
+      legend->AddEntry(h_s1, "#pm#sigma", "f");
+      legend->AddEntry(h_s2, "#pm2#sigma", "f");
+      legend->Draw();
+
+      TLatex * rtext = new TLatex( 0.23, 0.82, right_text_src.c_str());
+      rtext->SetNDC(kTRUE) ;
+      rtext->SetTextSize( 0.044 ) ;
+      rtext->SetTextFont(132) ;
+      rtext->Draw() ;
+
+      TLatex * ltext = new TLatex( 0.50, 0.92, left_text_src.c_str());
+      ltext->SetNDC(kTRUE) ;
+      ltext->SetTextSize( 0.044 ) ;
+      ltext->SetTextFont(132) ;
+      ltext->Draw() ;
+
+      canv->RedrawAxis();
+      canv->GetFrame()->SetBorderSize( 12 );
       return canv;
     }
   };
