@@ -17,6 +17,25 @@ namespace pm {
   
   struct Limits{
     double l_1s, c_1s, u_1s, l_2s, c_2s, u_2s;
+    Limits(){
+      l_1s = 0;
+      c_1s = 0;
+      u_1s = 0;
+      l_2s = 0;
+      c_2s = 0; 
+      u_2s = 0;
+    }
+
+    Limits& operator += (Limits const & l) {
+      l_1s += l.l_1s;
+      c_1s += l.c_1s;
+      u_1s += l.u_1s;
+      l_2s += l.l_2s;
+      c_2s += l.c_2s;
+      u_2s += l.u_2s;
+      return *this;
+    }
+    void Print() const { cout  << "Limits(" << l_2s << " " << l_1s << " " << c_1s << " " << u_1s << " " << u_2s << ")" << endl; }
   };
   
   Limits get_th1_limits(TH1 * hist){

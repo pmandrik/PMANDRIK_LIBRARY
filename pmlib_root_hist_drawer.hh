@@ -137,12 +137,12 @@ namespace pm {
         hre->Add( central, -1. );
       }
       if(mode == "diff percent"){
-        cout << hist->GetTitle() << endl;
+        // cout << hist->GetTitle() << endl;
         for(int j = 1; j <= central->GetNbinsX(); j++ ){
-          float central_bin_value = central->GetBinContent(j);
+           float central_bin_value = central->GetBinContent(j);
           if( TMath::Abs(central_bin_value) > 0.0000001){
             hre->SetBinContent(j, 100. * hre->GetBinContent(j) / central_bin_value );
-            cout << 100. * hre->GetBinContent(j) / central_bin_value << " " << hre->GetBinContent(j) << " " << central_bin_value << endl;
+            // cout << 100. * hre->GetBinContent(j) / central_bin_value << " " << hre->GetBinContent(j) << " " << central_bin_value << endl;
           }
           else if( TMath::Abs( hre->GetBinContent(j) ) > 0.0000001 ) hre->SetBinContent(j, 100. * hre->GetBinContent(j) / TMath::Abs( hre->GetBinContent(j) ) );
           else hre->SetBinContent(j, 0 );
@@ -210,20 +210,42 @@ namespace pm {
 
 
   // draw shade graph with central value and contours
+  struct BrasilPoint{
+    float xs, pl2, pl1, pc, pu1, pu2;
+    BrasilPoint(int index, vector<float> & xsv, vector<float> & pl2v, vector<float> & pl1v, vector<float> & pcv, vector<float> & pu1v, vector<float> & pu2v){
+      xs = xsv.at(index);
+      pl2 = pl2v.at(index);
+      pl1 = pl1v.at(index);
+      pc  = pcv.at(index);
+      pu1 = pu1v.at(index);
+      pu2 = pu2v.at(index);
+    }
+
+    bool operator < (const BrasilPoint & p) const{
+        return (xs < p.xs);
+    }
+  };
+
   TGraph * draw_brasil(vector<float> & xs, vector<float> & pl2, vector<float> & pl1, vector<float> & pc, vector<float> & pu1, vector<float> & pu2){
     int n_size = pc.size();
     TGraph * gc  = new TGraph( n_size );
     TGraph * gs1 = new TGraph( 2*n_size );
     TGraph * gs2 = new TGraph( 2*n_size );
+
+    vector<BrasilPoint> bpoints;
+    for(int i = 0; i < n_size; i++){
+      bpoints.push_back(BrasilPoint(i, xs, pl2, pl1, pc, pu1, pu2));
+    }
+    std::sort( bpoints.begin(), bpoints.end() );    
     
     for(int i = 0; i < n_size; i++){
-      gc->SetPoint(  i,            xs.at(i), pc.at(i) );
+      gc->SetPoint(  i,            bpoints.at(i).xs, bpoints.at(i).pc );
       
-      gs1->SetPoint( i,            xs.at(i), pl1.at(i) );
-      gs1->SetPoint( 2*n_size-1-i, xs.at(i), pu1.at(i) );
+      gs1->SetPoint( i,            bpoints.at(i).xs, bpoints.at(i).pl1 );
+      gs1->SetPoint( 2*n_size-1-i, bpoints.at(i).xs, bpoints.at(i).pu1 );
       
-      gs2->SetPoint( i,            xs.at(i), pl2.at(i) );
-      gs2->SetPoint( 2*n_size-1-i, xs.at(i), pu2.at(i) );
+      gs2->SetPoint( i,            bpoints.at(i).xs, bpoints.at(i).pl2 );
+      gs2->SetPoint( 2*n_size-1-i, bpoints.at(i).xs, bpoints.at(i).pu2 );
     }
     
     gs2->SetFillColor(kYellow);
