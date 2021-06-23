@@ -147,7 +147,7 @@ namespace pm {
     int Ny = items.size();
     int Nx = items.at(0).size();
 
-    vector<int> column_widthes = vector<int>(Nx, 0);
+    std::vector<int> column_widthes = std::vector<int>(Nx, 0);
     for(int y = 0; y < Ny; y++){
       const std::vector<std::string> & line = items[y];
       if(line.size() != Nx){
@@ -164,7 +164,7 @@ namespace pm {
       total_width += column_widthes[x];
     }
     if(total_width > max_total_width){
-      vector<int> column_widthes_delta = column_widthes;
+      std::vector<int> column_widthes_delta = column_widthes;
       int sum_resized_column_widthes = 0;
       int max_resize_index = 0;
       for(int x = 0; x < Nx; x++){
