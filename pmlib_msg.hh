@@ -8,6 +8,7 @@
 #ifndef PMLIB_MSG_HH
 #define PMLIB_MSG_HH 1
 
+#include <algorithm>
 #include<iostream> 
 #include<string>
 #include<vector>
@@ -172,7 +173,7 @@ namespace pm {
         column_widthes_delta[x] -= column_widthes[x];
         sum_resized_column_widthes += column_widthes[x];
       }
-      int extra_space = max(0, max_total_width - sum_resized_column_widthes);
+      int extra_space = std::max(0, max_total_width - sum_resized_column_widthes);
       while( extra_space ){
         std::vector<int>::iterator max_element_it = std::max_element(column_widthes_delta.begin(), column_widthes_delta.end());
         column_widthes[ std::distance(column_widthes_delta.begin(), max_element_it) ] += 1;

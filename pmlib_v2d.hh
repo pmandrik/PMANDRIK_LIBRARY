@@ -55,22 +55,22 @@ namespace pm {
     v3(v2 v):x(v.x),y(v.y),z(v.z){};
     inline v3 Rotate(float angle, int axis){
       if(axis==0){
-        v2 yz = v2(y, z).rotate(angle);
+        v2 yz = v2(y, z).Rotate(angle);
         return v3(x, yz.x, yz.y);
       }
       if(axis==1){
-        v2 xz = v2(x, z).rotate(angle);
+        v2 xz = v2(x, z).Rotate(angle);
         return v3(xz.x, y, xz.y);
       }
       if(axis==2){
-        v2 xy = v2(x, y).rotate(angle);
+        v2 xy = v2(x, y).Rotate(angle);
         return v3(xy.x, xy.y, z);
       }
       return *this;
     }
-    inline v3 Rotated(const float & angle, int axis){return rotate(angle * RADDIG, axis);}
+    inline v3 Rotated(const float & angle, int axis){return Rotate(angle * PI_180, axis);}
     inline v3 Rotated(const float & angle_x, const float & angle_y, const float & angle_z){
-      return Rotate(angle_x * RADDIG, 0).rotate(angle_y * RADDIG, 1).rotate(angle_z * RADDIG, 2);
+      return Rotate(angle_x * PI_180, 0).Rotate(angle_y * PI_180, 1).Rotate(angle_z * PI_180, 2);
     }
 
     inline v3 PerspectiveScale(const v3 & start_pos, const float & end_plane_x, const float & end_plane_y){
@@ -104,7 +104,7 @@ namespace pm {
   bool operator == (v3 va, v3 vb){return ((va.x == vb.x) and (va.y == vb.y) and (va.z == vb.z));}
   bool operator != (v3 va, v3 vb){return ((va.x != vb.x) or (va.y != vb.y) or (va.z != vb.z));}
 
-  ostream & operator << (ostream & out, v3 v){return out << "v3(" << v.x << "," << v.y << "," << v.z << ")";};
+  std::ostream & operator << (std::ostream & out, v3 v){return out << "v3(" << v.x << "," << v.y << "," << v.z << ")";};
 
   // ======= rgb ====================================================================
   class rgb {
@@ -133,7 +133,7 @@ namespace pm {
   rgb operator / (rgb v, float value){return rgb(v.r/value, v.g/value, v.b/value);}
   rgb operator / (rgb va, rgb vb){return rgb(va.r / vb.r, va.g / vb.g, va.b / vb.b);}
 
-  ostream & operator << (ostream & out, rgb v){return out << " rgb( " << v.r << ", " << v.g << ", " << v.b << ", " << v.a << " ) ";};
+  std::ostream & operator << (std::ostream & out, rgb v){return out << " rgb( " << v.r << ", " << v.g << ", " << v.b << ", " << v.a << " ) ";};
 }
 
 #endif
