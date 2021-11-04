@@ -35,7 +35,23 @@ namespace pm {
     answer.push_back(str);
   }
   
+  void replace_all(std::string & str, const std::string& from, const std::string& to) {
+    size_t start_pos = 0;
+    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length();
+    }
+  }
+  
+  void replace_all_map(string & path, map<string,string> dictionary){
+    if(not path.size()) return;
+    for(auto it = dictionary.begin(); it != dictionary.end(); ++it){
+      replace_all( path, it->first, it->second );
+    }
+  }
+  
   //=================================== OS, FOLDERS MANIPULATION =========================================================
+#ifndef NO_CERN_ROOT
   void get_all_files_in_folder(std::string input_folder, std::string pattern, std::vector<std::string> & answer){
     regex reg_incl( pattern );
     TSystemDirectory dir(input_folder.c_str(), input_folder.c_str()); 
@@ -52,7 +68,7 @@ namespace pm {
       answer.push_back( name );
     }
   }
-  
+#endif
 }
   
 #endif
