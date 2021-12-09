@@ -23,7 +23,6 @@ namespace pm {
 
   void split_string(std::string str, std::vector<std::string> & answer, const std::string & sep = " "){
     int sep_size = sep.size();
-
     for(int i = 0; i + sep_size < str.size(); i++){
       if( sep == str.substr(i, sep_size) ){
         answer.push_back( str.substr(0, i) ); 
@@ -31,8 +30,19 @@ namespace pm {
         i = 0;
       }
     }
-
     answer.push_back(str);
+  }
+
+  void split_string_strip(std::string str, std::vector<std::string> & answer, const std::string & sep = " "){
+    int sep_size = sep.size();
+    for(int i = 0; i + sep_size < str.size(); i++){
+      if( sep == str.substr(i, sep_size) ){
+        answer.push_back( str.substr(0, i) ); 
+        str = str.substr(i + sep_size, str.size() - i - sep_size);
+        i = 0;
+      }
+    }
+    answer.push_back( strip(str) );
   }
   
   void replace_all(std::string & str, const std::string& from, const std::string& to) {
@@ -48,6 +58,18 @@ namespace pm {
     for(auto it = dictionary.begin(); it != dictionary.end(); ++it){
       replace_all( path, it->first, it->second );
     }
+  }
+
+  void parce_string_function(string str, string & fname, vector<string> & fargs, const string & bracket="(", const string & fsep=","){
+    fname = str;
+    fargs.clear();
+    auto found_s = str.find( bracket );
+    auto found_e = str.find( bracket );
+    if (found_s==std::string::npos or found_e==std::string::npos) return;
+    if (found_s > found_e) return;
+    fname = str.substr(0, found_s);
+    str   = str.substr(found_s+1, found_e-1);
+    split_string_strip(str, fargs, fsep);
   }
   
   //=================================== OS, FOLDERS MANIPULATION =========================================================

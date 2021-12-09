@@ -63,17 +63,17 @@ namespace pm {
     VERBOSE
   };
 
-  #define MSG_ERROR(...) if(verbose_lvl >= pm::verbose::ERROR)   pm::msg_err(__VA_ARGS__)
-  #define MSG_WARNING(...) if(verbose_lvl >= pm::verbose::WARNING) pm::msg_err(__VA_ARGS__)
-  #define MSG_INFO(...) if(verbose_lvl >= pm::verbose::INFO)    pm::msg(__VA_ARGS__)
-  #define MSG_DEBUG(...) if(verbose_lvl >= pm::verbose::DEBUG)   pm::msg(__VA_ARGS__)
-  #define MSG_VERBOSE(...) if(verbose_lvl >= pm::verbose::VERBOSE) pm::msg(__VA_ARGS__)
+  #define MSG_ERROR(...) if(verbose_lvl >= pm::verbose::ERROR)   pm::msg_err("ERROR:", __VA_ARGS__)
+  #define MSG_WARNING(...) if(verbose_lvl >= pm::verbose::WARNING) pm::msg_err("WARNING:", __VA_ARGS__)
+  #define MSG_INFO(...) if(verbose_lvl >= pm::verbose::INFO)    pm::msg("INFO:", __VA_ARGS__)
+  #define MSG_DEBUG(...) if(verbose_lvl >= pm::verbose::DEBUG)   pm::msg("DEBUG:", __VA_ARGS__)
+  #define MSG_VERBOSE(...) if(verbose_lvl >= pm::verbose::VERBOSE) pm::msg("VERBOSE:", __VA_ARGS__)
 
-  #define MSG_ERROR_NLL(...) if(verbose_lvl >= pm::verbose::ERROR)   pm::msg_err_nll(__VA_ARGS__)
-  #define MSG_WARNING_NLL(...) if(verbose_lvl >= pm::verbose::WARNING) pm::msg_err_nll(__VA_ARGS__)
-  #define MSG_INFO_NLL(...) if(verbose_lvl >= pm::verbose::INFO)    pm::msg_nll(__VA_ARGS__)
-  #define MSG_DEBUG_NLL(...) if(verbose_lvl >= pm::verbose::DEBUG)   pm::msg_nll(__VA_ARGS__)
-  #define MSG_VERBOSE_NLL(...) if(verbose_lvl >= pm::verbose::VERBOSE) pm::msg_nll(__VA_ARGS__)
+  #define MSG_ERROR_NLL(...) if(verbose_lvl >= pm::verbose::ERROR)   pm::msg_err_nll("ERROR:",__VA_ARGS__)
+  #define MSG_WARNING_NLL(...) if(verbose_lvl >= pm::verbose::WARNING) pm::msg_err_nll("WARNING:", __VA_ARGS__)
+  #define MSG_INFO_NLL(...) if(verbose_lvl >= pm::verbose::INFO)    pm::msg_nll("INFO:", __VA_ARGS__)
+  #define MSG_DEBUG_NLL(...) if(verbose_lvl >= pm::verbose::DEBUG)   pm::msg_nll("DEBUG:", __VA_ARGS__)
+  #define MSG_VERBOSE_NLL(...) if(verbose_lvl >= pm::verbose::VERBOSE) pm::msg_nll("VERBOSE:", __VA_ARGS__)
 
   // basic class for macross usage
   unsigned short DEFAULT_VERBOSE_LEVEL = verbose::INFO;
