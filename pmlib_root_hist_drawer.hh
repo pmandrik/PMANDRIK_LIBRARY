@@ -40,8 +40,8 @@ namespace pm {
           gStyle->SetTextSize(0.05);
           gStyle->SetLabelFont(font,"XYZ");
           gStyle->SetTitleFont(font,"XYZ");
-          gStyle->SetLabelSize(0.05,"XYZ"); //0.035
-          gStyle->SetTitleSize(0.05,"XYZ");
+          gStyle->SetLabelSize(0.03,"XYZ"); //0.035
+          gStyle->SetTitleSize(0.03,"XYZ");
           
           gStyle->SetTitleOffset(1.25,"X");
           gStyle->SetTitleOffset(2.05,"Y");
@@ -80,7 +80,7 @@ namespace pm {
 
           hist->GetXaxis()->SetLabelFont(132);
           hist->GetXaxis()->SetLabelOffset(0.02);
-          hist->GetXaxis()->SetLabelSize(0.06);
+          hist->GetXaxis()->SetLabelSize(0.04);
           hist->GetXaxis()->SetTitleFont(132);
           hist->GetXaxis()->SetTitleOffset(1.5);
           hist->GetXaxis()->SetTitleSize(0.045);
@@ -309,15 +309,17 @@ namespace pm {
       TH1D* h_s2 = GetHistErrors("#pm2#sigma", s2_us, s2_ds);
 
       double maxh_v = -1.0;
-      double minh_v = -1.0;
+      double minh_v =  0.0;
       vector<TH1D*> hists = {h_c, h_s1, h_s2};
       for(TH1D * hist : hists){
         maxh_v = TMath::Max(maxh_v, hist->GetBinContent(hist->GetMaximumBin()));
         minh_v = TMath::Min(minh_v, hist->GetBinContent(hist->GetMinimumBin()));
       }
 
+maxh_v = 0.2*1000;
+
       for(TH1D * hist : hists){
-        hist->SetMaximum( 3.5 * maxh_v );
+        hist->SetMaximum( 1200 );
         hist->SetMinimum( 1.5 * minh_v );
       }
 
@@ -347,8 +349,8 @@ namespace pm {
       legend->SetLineColor(0);
       legend->SetTextFont(132) ;
       legend->AddEntry(h_c, "Expected 95% C.L.", "l");
-      legend->AddEntry(h_s1, "#pm#sigma", "f");
-      legend->AddEntry(h_s2, "#pm2#sigma", "f");
+      legend->AddEntry(h_s1, "#pm #sigma", "f");
+      legend->AddEntry(h_s2, "#pm 2#sigma", "f");
       legend->Draw();
 
       TLatex * rtext = new TLatex( 0.23, 0.82, right_text_src.c_str());
@@ -357,14 +359,14 @@ namespace pm {
       rtext->SetTextFont(132) ;
       rtext->Draw() ;
 
-      TLatex * ltext = new TLatex( 0.50, 0.92, left_text_src.c_str());
+      TLatex * ltext = new TLatex( 0.35, 0.92, left_text_src.c_str());
       ltext->SetNDC(kTRUE) ;
       ltext->SetTextSize( 0.044 ) ;
       ltext->SetTextFont(132) ;
       ltext->Draw() ;
 
-      canv->RedrawAxis();
       canv->GetFrame()->SetBorderSize( 12 );
+      canv->RedrawAxis();
       return canv;
     }
   };
