@@ -34,6 +34,7 @@ class Watchdog:
       self.logs_interval = 24; # h between new log creation
       self.nlogs         = 10; # max number of logs files
       self.logger = logging.getLogger(__name__)
+      self.logger.setLevel( logging.DEBUG )
       handler = logging.handlers.TimedRotatingFileHandler(log_path, when='h', interval=int(self.logs_interval), backupCount=int(self.nlogs))
       formatter = logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
       handler.setFormatter(formatter)
