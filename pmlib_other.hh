@@ -3,6 +3,34 @@
 
 namespace pm {
 
+  //=================================== Timer ====================================================================
+  class Timer{
+    public:
+    Timer(){};
+    Timer(int max_time) : mtime(max_time) { dtime = 1./float(mtime); Reset(); }
+    inline void Set(int time){itime = time; ftime = itime * dtime;}
+    inline void End(){ Set(mtime); }
+    inline void Reset(){ Set(0); }
+    inline void ResetBack(){ Set(mtime-1); }
+
+    bool Tick(int val=1){ 
+      if(itime >= mtime){ Reset(); return true; }
+      if(itime < 0){ ResetBack(); return true; }
+      itime += val; ftime += dtime*val;
+      return false; 
+    }
+
+    bool TickIf(int val=1){
+      if(itime >= mtime){ return false; }
+      if(itime < 0){ return false; }
+      itime += val; ftime += dtime*val;
+      return true; 
+    }
+
+    int mtime, itime;
+    float dtime, ftime;
+  };
+
   //=================================== STRING MANIPULATION =============================================================
   static void ltrim(std::string &s) {
     if(not s.size()) return;
@@ -53,14 +81,14 @@ namespace pm {
     }
   }
   
-  void replace_all_map(string & path, map<string,string> dictionary){
+  void replace_all_map(std::string & path, std::map<std::string,std::string> dictionary){
     if(not path.size()) return;
     for(auto it = dictionary.begin(); it != dictionary.end(); ++it){
       replace_all( path, it->first, it->second );
     }
   }
 
-  void parce_string_function(string str, string & fname, vector<string> & fargs, const string & bracket="(", const string & fsep=","){
+  void parce_string_function(std::string str, std::string & fname, std::vector<std::string> & fargs, const std::string & bracket="(", const std::string & fsep=","){
     fname = str;
     fargs.clear();
     auto found_s = str.find( bracket );
@@ -70,6 +98,26 @@ namespace pm {
     fname = str.substr(0, found_s);
     str   = str.substr(found_s+1, found_e-1);
     split_string_strip(str, fargs, fsep);
+  }
+
+  std::string add_leading_zeros(const int & index, const int & N_symbols){
+    std::string frame_index_str = std::to_string( index );
+    if( N_symbols < frame_index_str.size() ) frame_index_str = frame_index_str.substr(0, index);
+    return std::string(N_symbols - frame_index_str.length(), '0') + frame_index_str;
+  }
+
+  bool bool_from_string(const std::string & val, const bool & def_answer){
+    if(val=="false" or val=="False" or val=="False" or val=="NULL" or val=="null" or val=="nullptr" or val=="0") return false;
+    // if(val=="true" or val=="True") return true;
+    if( val.size() ) return true;
+    return def_answer;
+  }
+  
+  //=================================== MAP =========================================================
+  template <typename K, typename V> V map_get(const  std::map <K,V> & m, const K & key, const V & defval ) {
+    typename std::map<K,V>::const_iterator it = m.find( key );
+    if ( it == m.end() ) return defval;
+    return it->second;
   }
   
   //=================================== OS, FOLDERS MANIPULATION =========================================================

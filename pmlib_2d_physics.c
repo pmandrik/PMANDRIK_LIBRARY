@@ -177,12 +177,12 @@
     std::vector<pmObject*>   objects;
     std::vector<pmParticle*> particles;
 
-    template<typename T> void PushContainer(T * obj, vector<T*> & container){
+    template<typename T> void PushContainer(T * obj, std::vector<T*> & container){
       obj->id = container.size();
       container.push_back( obj );
     }
     
-    template<typename T> bool PopContainer(const int & index, vector<T*> & container){
+    template<typename T> bool PopContainer(const int & index, std::vector<T*> & container){
       int N = container.size();
       if( not N ) return false;
       if( index < 0 or index >= N ) return false;
@@ -197,7 +197,7 @@
       return true;
     }
     
-    template<typename T> bool PopContainer(T * obj, vector<T*> & container){ return PopContainer(obj->id, container); }
+    template<typename T> bool PopContainer(T * obj, std::vector<T*> & container){ return PopContainer(obj->id, container); }
     
     void Push(pmObject* obj){    PushContainer(obj, objects); }
     void Push(pmParticle* obj){  PushContainer(obj, particles); }
@@ -254,7 +254,7 @@
       y = object_positions_[id+1];
     }
     
-    vector<pmObject*> * objects_;
+    std::vector<pmObject*> * objects_;
     void GetObjectPos_object(const int & id, float & x, float & y){
       x = (*objects_)[id]->pos.x;
       y = (*objects_)[id]->pos.y;
@@ -299,8 +299,8 @@
     pm::v2 edges_1_[5], edges_2_[5];
     bool CheckRectCollisions(const pm::v2 & c1, const pm::v2 & sv11, const pm::v2 & sv12, const pm::v2 & c2, const pm::v2 & sv21, const pm::v2 & sv22){
       // check simple distance condition
-      if(abs(c1.x - c2.x) > max(abs(sv11.x), abs(sv12.x)) + max(abs(sv21.x), abs(sv22.x))) return false;
-      if(abs(c1.y - c2.y) > max(abs(sv11.y), abs(sv12.y)) + max(abs(sv21.y), abs(sv22.y))) return false;
+      if(abs(c1.x - c2.x) > std::max(abs(sv11.x), abs(sv12.x)) + std::max(abs(sv21.x), abs(sv22.x))) return false;
+      if(abs(c1.y - c2.y) > std::max(abs(sv11.y), abs(sv12.y)) + std::max(abs(sv21.y), abs(sv22.y))) return false;
 
       edges_1_[0] = c1 + sv11 ;
       edges_1_[1] = c1 + sv12 ; 
@@ -407,7 +407,7 @@
     float pos_x_, pos_y_, npos_x_, npos_y_, speed_x_, speed_y_, L_, point_x_, point_y_;
     float size_x_, size_y_, ccos_, ssin_;
     float size_start_x_, size_end_x_, size_start_y_, size_end_y_;
-    void Tick( vector<pmObject*> & objects, vector<pmParticle*> & particles, std::vector< std::pair<int, int> > & interacted_object_x_object_pairs, std::vector< std::pair<int, int> > & interacted_bullet_x_object_pairs ){
+    void Tick( std::vector<pmObject*> & objects, std::vector<pmParticle*> & particles, std::vector< std::pair<int, int> > & interacted_object_x_object_pairs, std::vector< std::pair<int, int> > & interacted_bullet_x_object_pairs ){
       pm::msg("Tick");
 std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
       // no bool * object_x_solids, int * object_tiles, int * bullet_tiles,  
