@@ -62,12 +62,21 @@ namespace pm {
     DEBUG=4,
     VERBOSE
   };
+  
+  // FIXME if Linux
+  #define MSG_COLOR_RED     "\x1b[31m"
+  #define MSG_COLOR_GREEN   "\x1b[32m"
+  #define MSG_COLOR_YELLOW  "\x1b[33m"
+  #define MSG_COLOR_BLUE    "\x1b[34m"
+  #define MSG_COLOR_MAGENTA "\x1b[35m"
+  #define MSG_COLOR_CYAN    "\x1b[36m"
+  #define MSG_COLOR_RESET   "\x1b[0m"
 
-  #define MSG_ERROR(...) if(verbose_lvl >= pm::verbose::ERROR)   pm::msg_err("ERROR:", __VA_ARGS__)
-  #define MSG_WARNING(...) if(verbose_lvl >= pm::verbose::WARNING) pm::msg_err("WARNING:", __VA_ARGS__)
+  #define MSG_ERROR(...) if(verbose_lvl >= pm::verbose::ERROR)   pm::msg_err(MSG_COLOR_RED "ERROR:" MSG_COLOR_RESET, __VA_ARGS__)
+  #define MSG_WARNING(...) if(verbose_lvl >= pm::verbose::WARNING) pm::msg_err(MSG_COLOR_YELLOW "WARNING:" MSG_COLOR_RESET, __VA_ARGS__)
   #define MSG_INFO(...) if(verbose_lvl >= pm::verbose::INFO)    pm::msg("INFO:", __VA_ARGS__)
-  #define MSG_DEBUG(...) if(verbose_lvl >= pm::verbose::DEBUG)   pm::msg("DEBUG:", __VA_ARGS__)
-  #define MSG_VERBOSE(...) if(verbose_lvl >= pm::verbose::VERBOSE) pm::msg("VERBOSE:", __VA_ARGS__)
+  #define MSG_DEBUG(...) if(verbose_lvl >= pm::verbose::DEBUG)   pm::msg(MSG_COLOR_BLUE "DEBUG:" MSG_COLOR_RESET, __VA_ARGS__)
+  #define MSG_VERBOSE(...) if(verbose_lvl >= pm::verbose::VERBOSE) pm::msg(MSG_COLOR_CYAN "VERBOSE:" MSG_COLOR_RESET, __VA_ARGS__)
 
   #define MSG_ERROR_NLL(...) if(verbose_lvl >= pm::verbose::ERROR)   pm::msg_err_nll("ERROR:",__VA_ARGS__)
   #define MSG_WARNING_NLL(...) if(verbose_lvl >= pm::verbose::WARNING) pm::msg_err_nll("WARNING:", __VA_ARGS__)
