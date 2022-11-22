@@ -105,6 +105,11 @@ namespace pm {
     if( N_symbols < frame_index_str.size() ) frame_index_str = frame_index_str.substr(0, index);
     return std::string(N_symbols - frame_index_str.length(), '0') + frame_index_str;
   }
+  
+  std::string normalize_lenght(std::string s, const int & lenght, const std::string & symbol){ // add 'symbol'
+    while(s.size() < lenght) s = symbol + s;
+    return s;
+  }
 
   bool bool_from_string(const std::string & val, const bool & def_answer){
     if(val=="false" or val=="False" or val=="False" or val=="NULL" or val=="null" or val=="nullptr" or val=="0") return false;
