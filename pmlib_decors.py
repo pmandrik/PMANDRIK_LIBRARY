@@ -12,7 +12,7 @@ def multiple_try(tryes=5, sleep_time=20):
         except KeyboardInterrupt:
           raise
         except Exception, error:
-          print 'pmlib.multiple_try() : fail to do %s function with %s args (%s try of %s) ... ' % (str(f), ', '.join([str(a) for a in args]), i+1, tryes)
+          print('pmlib.multiple_try() : fail to do %s function with %s args (%s try of %s) ... ' % (str(f), ', '.join([str(a) for a in args]), i+1, tryes))
           print 'with error: %s' % str(error)
           if i == tryes-1 : print 'traceback :', traceback.format_exc()
           else : time.sleep(sleep_time * (i+1))

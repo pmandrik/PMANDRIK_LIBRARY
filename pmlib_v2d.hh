@@ -3,7 +3,7 @@
 #ifndef PMLIB_V2D_HH
 #define PMLIB_V2D_HH 1 
 
-#include "pmlib_math.hh"
+#include "pmlib_math_consts.hh"
 
 #include <ostream>
 

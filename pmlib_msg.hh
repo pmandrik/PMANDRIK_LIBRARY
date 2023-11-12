@@ -9,11 +9,20 @@
 #define PMLIB_MSG_HH 1
 
 #include <algorithm>
-#include<iostream> 
-#include<string>
-#include<vector>
+#include <iostream> 
+#include <string>
+#include <vector>
 
 namespace pm {
+  // ======= PART 0. ====================================================================
+  enum {
+    PM_SUCCESS = 0,
+    PM_ERROR,
+    PM_ERROR_NULLPTR,
+    PM_ERROR_DUPLICATE,
+    PM_ERROR_MAP_FIND,
+  };
+
   // ======= PART I. msg variardic templates ====================================================================
   // ======= msg ====================================================================
   void msg(){ std::cout << "\n" << std::endl; };
@@ -64,6 +73,7 @@ namespace pm {
   };
   
   // FIXME if Linux
+  #define __PFN__ __PRETTY_FUNCTION__
   #define MSG_COLOR_RED     "\x1b[31m"
   #define MSG_COLOR_GREEN   "\x1b[32m"
   #define MSG_COLOR_YELLOW  "\x1b[33m"
@@ -83,10 +93,17 @@ namespace pm {
   #define MSG_INFO_NLL(...) if(verbose_lvl >= pm::verbose::INFO)    pm::msg_nll("INFO:", __VA_ARGS__)
   #define MSG_DEBUG_NLL(...) if(verbose_lvl >= pm::verbose::DEBUG)   pm::msg_nll("DEBUG:", __VA_ARGS__)
   #define MSG_VERBOSE_NLL(...) if(verbose_lvl >= pm::verbose::VERBOSE) pm::msg_nll("VERBOSE:", __VA_ARGS__)
+  
+  #define PMSG_ERROR(...) if(verbose_lvl >= pm::verbose::ERROR)   pm::msg_err(MSG_COLOR_RED "ERROR:" MSG_COLOR_RESET, __PFN__, __VA_ARGS__)
+  #define PMSG_WARNING(...) if(verbose_lvl >= pm::verbose::WARNING) pm::msg_err(MSG_COLOR_YELLOW "WARNING:" MSG_COLOR_RESET, __PFN__, __VA_ARGS__)
+  #define PMSG_INFO(...) if(verbose_lvl >= pm::verbose::INFO)    pm::msg("INFO:", __PFN__, __VA_ARGS__)
+  #define PMSG_DEBUG(...) if(verbose_lvl >= pm::verbose::DEBUG)   pm::msg(MSG_COLOR_BLUE "DEBUG:" MSG_COLOR_RESET, __PFN__, __VA_ARGS__)
+  #define PMSG_VERBOSE(...) if(verbose_lvl >= pm::verbose::VERBOSE) pm::msg(MSG_COLOR_CYAN "VERBOSE:" MSG_COLOR_RESET, __PFN__, __VA_ARGS__)
 
   // basic class for macross usage
   unsigned short DEFAULT_VERBOSE_LEVEL = verbose::INFO;
   class PmMsg {
+    public:
     PmMsg () { verbose_lvl = DEFAULT_VERBOSE_LEVEL; };
     int verbose_lvl;
   };
