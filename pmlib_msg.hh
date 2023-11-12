@@ -150,12 +150,12 @@ namespace pm {
   }
 
   // ======= tables  ==================================================================== 
-  void print_table_item(const std::string & item, int max_available_chars, const std::string & separator, const std::string & reduction_symbol){
+  void print_table_item(const std::string & item, size_t max_available_chars, const std::string & separator, const std::string & reduction_symbol){
     std::cout << separator;
     max_available_chars -= separator.size();
     if( item.size() > max_available_chars ){
       max_available_chars -= reduction_symbol.size();
-      std::cout << item.substr(0, std::max(max_available_chars, 1) ) << reduction_symbol;
+      std::cout << item.substr(0, std::max(max_available_chars, (size_t)1) ) << reduction_symbol;
       return;
     }
     int total_spaces = max_available_chars - item.size();
@@ -164,42 +164,41 @@ namespace pm {
     std::cout << std::string(total_spaces/2, ' ');
   }
 
-  void print_as_table(const std::vector< std::vector<std::string> > & items, const int & max_total_width = 150, const int & graphic_mode = 0){
+  void print_as_table(const std::vector< std::vector<std::string> > & items, const size_t & max_total_width = 150, const size_t & graphic_mode = 0){
     if(not items.size()) return;
 
     std::string separator = "|";
     std::string reduction_symbol = "$";
     if(graphic_mode == 1){}; // TODO
 
-    int Ny = items.size();
-    int Nx = items.at(0).size();
+    size_t Ny = items.size();
+    size_t Nx = items.at(0).size();
 
     std::vector<int> column_widthes = std::vector<int>(Nx, 0);
-    for(int y = 0; y < Ny; y++){
+    for(size_t y = 0; y < Ny; y++){
       const std::vector<std::string> & line = items[y];
       if(line.size() != Nx){
         msg_err("pm::print_as_table(): different line sizes", Nx, line.size(), "for line", y);
         return;
       }
-      for(int x = 0; x < Nx; x++)
+      for(size_t x = 0; x < Nx; x++)
         column_widthes[x] = std::max((int)line[x].size(), column_widthes[x]);
     }
 
-    int total_width = 0;
-    for(int x = 0; x < Nx; x++){
+    size_t total_width = 0;
+    for(size_t x = 0; x < Nx; x++){
       column_widthes[x] += 3; // add separators and spaces
       total_width += column_widthes[x];
     }
     if(total_width > max_total_width){
       std::vector<int> column_widthes_delta = column_widthes;
       int sum_resized_column_widthes = 0;
-      int max_resize_index = 0;
-      for(int x = 0; x < Nx; x++){
+      for(size_t x = 0; x < Nx; x++){
         column_widthes[x] = int( float(column_widthes[x] * max_total_width) / total_width );
         column_widthes_delta[x] -= column_widthes[x];
         sum_resized_column_widthes += column_widthes[x];
       }
-      int extra_space = std::max(0, max_total_width - sum_resized_column_widthes);
+      int extra_space = std::max((size_t)0, max_total_width - sum_resized_column_widthes);
       while( extra_space ){
         std::vector<int>::iterator max_element_it = std::max_element(column_widthes_delta.begin(), column_widthes_delta.end());
         column_widthes[ std::distance(column_widthes_delta.begin(), max_element_it) ] += 1;
@@ -211,16 +210,16 @@ namespace pm {
 
     // print first line
     const std::vector<std::string> & line_0 = items[0];
-    for(int x = 0; x < Nx; x++)
+    for(size_t x = 0; x < Nx; x++)
       print_table_item(line_0[x], std::max(column_widthes[x], 2), separator, reduction_symbol);
 
     // print separator
     std::cout << std::endl << std::string(total_width, '-') << std::endl;
 
     // print other parts of the table
-    for(int y = 1; y < Ny; y++){
+    for(size_t y = 1; y < Ny; y++){
       const std::vector<std::string> & line = items[y];
-      for(int x = 0; x < Nx; x++)
+      for(size_t x = 0; x < Nx; x++)
         print_table_item(line[x], std::max(column_widthes[x], 2), separator, reduction_symbol);
       std::cout << std::endl;
     }

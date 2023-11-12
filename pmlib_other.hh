@@ -190,22 +190,22 @@ namespace pm {
   }
   
   //=================================== TREE =========================================================
-  template<class T, class KEY>
+  template<class DATA, class LABEL>
   class NaryNode {
     private:
-    NaryNode* father;
-    size_t priority;
-    std::map<KEY, NaryNode*> childs;
-    T* data = nullptr;
+    NaryNode<DATA,LABEL>* father;
+    int priority;
+    std::map<LABEL, NaryNode*> childs;
+    DATA* data = nullptr;
+    LABEL label;
     
     public:
-    void SetData(T* data){ this->data = data; }
-    T* GetData(T* data){ return data; }
+    void SetData(DATA* data){ this->data = data; }
+    DATA* GetData(DATA* data){ return data; }
     
-    KEY GetKey(){
-      if( data == nullptr ) throw std::logic_error("data nullptr");
-      return data->GetKey();
-    }
+    /// unic label
+    LABEL GetLabel(){ return label; }
+    void SetLabel(LABEL & label){ this->label = label; }
     
     /// one o zero fathers
     void SetFather( NaryNode* father ){ this->father = father; } 
@@ -213,40 +213,145 @@ namespace pm {
     
     /// many or zero chfatherildrens
     int AddChild( NaryNode* child ) { 
-      KEY key = child->GetKey();
-      if(childs.count( key )){
+      LABEL label = child->GetLabel();
+      if(childs.count( label )){
         return PM_ERROR_DUPLICATE;
       }
-      childs[ key ] = child;
+      childs[ label ] = child;
       return PM_SUCCESS; 
     }
     
     int RemoveChild( NaryNode* child ) {
-      KEY key = child->GetKey();
-      auto find = childs.find( key );
+      LABEL label = child->GetLabel();
+      auto find = childs.find( label );
       if( find == childs.end() ) return PM_ERROR_MAP_FIND;
-      childs.remove( find );
+      childs.erase( find );
       return PM_SUCCESS;
     }
     
-    NaryNode* GetChild( KEY key ) {
-      auto find = childs.find( key );
+    NaryNode* GetChild( LABEL label ) {
+      auto find = childs.find( label );
       if( find == childs.end() ) return nullptr;
       return find->second;
     }
+    
+    std::vector<LABEL> GetChildLabels() {
+      std::vector<LABEL> answer;
+      for(auto const& item: childs)
+        answer.push_back(item.first);
+      return answer;
+    }
+    
+    std::vector<NaryNode*> GetChilds() {
+      std::vector<NaryNode*> answer;
+      for(auto const& item: childs)
+        answer.push_back(item.second);
+      return answer;
+    }
 
     /// order of childres with same fathers or no fathers
-    void SetPriority( size_t priority ) { this->priority = priority; }
-    size_t GetPriority() { return priority; }
+    void SetPriority( int priority ) { this->priority = priority; }
+    int GetPriority() { return priority; }
     
     ///
     void Print(){
-      printf("NaryNode(%p): father = %p, N childs = %d, priority = %d, data = %p\n", this, father, childs.size(), priority, data);
+      printf("NaryNode(%p): father = %p, N childs = %ld, priority = %d, data = %p\n", this, father, childs.size(), priority, data);
     }
   };
   
+  template<class DATA, class LABEL>
   class NaryTree {
+    private:
+    std::map<LABEL, NaryNode<DATA,LABEL>* > nodes;
     
+    public:
+    
+    NaryNode<DATA,LABEL>* GetNode(LABEL label){
+      auto find = nodes.find( label );
+      if( find == nodes.end() ) return nullptr;
+      return find->second;
+    }
+    
+    int AddNode(LABEL label){
+      if( nodes.count( label )  ){
+        return PM_ERROR_DUPLICATE;
+      }
+      NaryNode<DATA,LABEL> * node = new NaryNode<DATA,LABEL>();
+      node->SetLabel( label );
+      nodes[ label ] = node;
+      return PM_SUCCESS;
+    }
+    
+    int RemoveNode(LABEL label){
+      // remove from nodes
+      auto find = nodes.find( label );
+      if( find == nodes.end() ) return PM_ERROR_MAP_FIND;
+      nodes.erase( find );
+      
+      // remove from childs & fathers
+      auto node = find->second;
+      auto father = node->GetFather();
+      if( father ){
+        father->RemoveChild( node );
+      }
+      auto childs = node->GetChilds();
+      for(auto child : childs){
+        child->SetFather( nullptr );
+      }
+      
+      delete node;
+      return PM_SUCCESS;
+    }
+    
+    int SetNodeFather(LABEL label, LABEL flabel){
+      if( label == flabel ) return PM_ERROR;
+      auto node = GetNode( label );
+      if( node == nullptr ) return PM_ERROR_MAP_FIND;
+      auto fnode = GetNode( flabel );
+      if( fnode == nullptr ) return PM_ERROR_MAP_FIND;
+      
+      auto oldFather = node->GetFather();
+      if( oldFather != nullptr ){
+        int err = oldFather->RemoveChild( node );
+        if( err ) return err;
+      }
+      
+      node->SetFather( fnode );
+      fnode->AddChild( node );
+      return PM_SUCCESS;
+    }
+    
+    int RemoveNodeFather(LABEL label){
+      auto node = GetNode( label );
+      if( node == nullptr ) return PM_ERROR_MAP_FIND;
+      auto fnode = node->GetFather();
+      if( fnode == nullptr ) return PM_SUCCESS;
+      int err = fnode->RemoveChild( node );
+      if( err ) return err;
+      node->SetFather( nullptr );
+      return PM_SUCCESS;
+    }
+    
+    int SetNodeData(LABEL label, DATA * data){
+      auto node = GetNode( label );
+      if( node == nullptr ) return PM_ERROR_MAP_FIND;
+      node->SetData( data );
+      return PM_SUCCESS;
+    }
+    
+    int SetNodePriority(LABEL label, int priority){
+      auto node = GetNode( label );
+      if( node == nullptr ) return PM_ERROR_MAP_FIND;
+      node->SetPriority( priority );
+      return PM_SUCCESS;
+    }
+    
+    bool Check(){
+      return true;
+    }
+    
+    std::vector<DATA*> GetList(){
+    }
   };
   
   //=================================== OS, FOLDERS MANIPULATION =========================================================
