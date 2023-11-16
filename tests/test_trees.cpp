@@ -31,28 +31,43 @@ int main(){
      nA3->Print();
    }
    {
-     printf("T2=============\n");
-     NaryTree<string,string> *tree = new NaryTree<string,string>();
-     tree->AddNode( "A" );
-     tree->AddNode( "A1" );
-     tree->AddNode( "A2" );
-     tree->AddNode( "A3" );
-     
-     tree->SetNodeFather( "A1", "A" );
-     tree->SetNodeFather( "A2", "A1" );
-     tree->SetNodeFather( "A3", "A1" );
-     
-     tree->GetNode("A")->Print();
-     tree->GetNode("A1")->Print();
-     tree->GetNode("A2")->Print();
-     tree->GetNode("A3")->Print();
-     
-     tree->RemoveNode( "A1" );
-     printf("tree->RemoveNode( A1 );\n");
-     tree->GetNode("A")->Print();
-     // tree->GetNode("A1")->Print();
-     tree->GetNode("A2")->Print();
-     tree->GetNode("A3")->Print();
+      printf("T2=============\n");
+      NaryTree<string,string> *tree = new NaryTree<string,string>();
+      tree->AddNode( "A" );
+      tree->AddNode( "A1" );
+      tree->AddNode( "A2" );
+      tree->AddNode( "A3" );
+
+      tree->SetNodeFather( "A1", "A" );
+      tree->SetNodeFather( "A2", "A1" );
+      tree->SetNodeFather( "A3", "A1" );
+      
+      tree->SetNodePriority( "A2", 100 );
+      tree->SetNodePriority( "A3", 10 );
+
+      tree->GetNode("A")->Print();
+      tree->GetNode("A1")->Print();
+      tree->GetNode("A2")->Print();
+      tree->GetNode("A3")->Print();
+      
+      auto nodeListX = tree->GetNodeList();
+      for(auto node : nodeListX){
+        printf("%p %s, ", node, node->GetLabel().c_str());
+      }
+      printf("\n");
+      tree->SetRemoveStrategy(1);
+      tree->RemoveNode( "A1" );
+      printf("tree->RemoveNode( A1 );\n");
+      tree->GetNode("A")->Print();
+      // tree->GetNode("A1")->Print();
+      tree->GetNode("A2")->Print();
+      tree->GetNode("A3")->Print();
+
+      auto nodeList = tree->GetNodeList();
+      for(auto node : nodeList){
+        printf("%p %s, ", node, node->GetLabel().c_str());
+      }
+      printf("\n");
    }
    
    printf("buy buy");

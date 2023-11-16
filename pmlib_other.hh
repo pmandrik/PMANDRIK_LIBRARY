@@ -1,7 +1,7 @@
 #ifndef PMLIB_OTHER_HH
 #define PMLIB_OTHER_HH 1
 
-#ifdef NO_CERN_ROOT
+#ifndef CERN_ROOT
   #include <vector>
   #include <map>
   #include <string>
@@ -193,7 +193,7 @@ namespace pm {
   template<class DATA, class LABEL>
   class NaryNode {
     private:
-    NaryNode<DATA,LABEL>* father;
+    NaryNode<DATA,LABEL>* father = nullptr;
     int priority;
     std::map<LABEL, NaryNode*> childs;
     DATA* data = nullptr;
@@ -201,7 +201,7 @@ namespace pm {
     
     public:
     void SetData(DATA* data){ this->data = data; }
-    DATA* GetData(DATA* data){ return data; }
+    DATA* GetData() { return data; }
     
     /// unic label
     LABEL GetLabel(){ return label; }
@@ -244,17 +244,21 @@ namespace pm {
     
     std::vector<NaryNode*> GetChilds() {
       std::vector<NaryNode*> answer;
-      for(auto const& item: childs)
+      for(auto const& item: childs){
         answer.push_back(item.second);
+      }
+      std::sort(answer.begin(), answer.end(), 
+        [](const NaryNode<DATA,LABEL> *a, const NaryNode<DATA,LABEL> *b){ return a->priority < b->priority; }
+      );
       return answer;
     }
 
     /// order of childres with same fathers or no fathers
     void SetPriority( int priority ) { this->priority = priority; }
-    int GetPriority() { return priority; }
+    int GetPriority() const { return priority; }
     
     ///
-    void Print(){
+    void Print() const {
       printf("NaryNode(%p): father = %p, N childs = %ld, priority = %d, data = %p\n", this, father, childs.size(), priority, data);
     }
   };
@@ -263,8 +267,11 @@ namespace pm {
   class NaryTree {
     private:
     std::map<LABEL, NaryNode<DATA,LABEL>* > nodes;
+    int removeStrategy = 0;
     
     public:
+    
+    void SetRemoveStrategy(int val){ removeStrategy = val; }
     
     NaryNode<DATA,LABEL>* GetNode(LABEL label){
       auto find = nodes.find( label );
@@ -296,7 +303,12 @@ namespace pm {
       }
       auto childs = node->GetChilds();
       for(auto child : childs){
-        child->SetFather( nullptr );
+        if( removeStrategy == 1 && father ){
+          child->SetFather( father );
+          father->AddChild( child );
+        }
+        else 
+          child->SetFather( nullptr );
       }
       
       delete node;
@@ -346,11 +358,47 @@ namespace pm {
       return PM_SUCCESS;
     }
     
-    bool Check(){
-      return true;
+    std::vector<NaryNode<DATA,LABEL>*> GetHeads(){
+      std::vector<NaryNode<DATA,LABEL>*> heads;
+      
+      for(auto const& x : nodes){
+        auto node = x.second;
+        if( node->GetFather() != nullptr ) continue;
+        heads.push_back( node );
+      }
+      
+      std::sort(heads.begin(), heads.end(), 
+        [](const NaryNode<DATA,LABEL> *a, const NaryNode<DATA,LABEL> *b){ 
+          return a->GetPriority() < b->GetPriority(); 
+          });
+          
+      return heads;
     }
     
-    std::vector<DATA*> GetList(){
+    void GetNodeListRec( NaryNode<DATA,LABEL>* node, std::vector<NaryNode<DATA,LABEL>*> *answer ){
+      auto childs = node->GetChilds();
+      for(auto child : childs){
+        GetNodeListRec(child, answer);
+      }
+      answer->push_back( node );
+    }
+    
+    std::vector<NaryNode<DATA,LABEL>*> GetNodeList(){
+      std::vector<NaryNode<DATA,LABEL>*> answer;
+      std::vector<NaryNode<DATA,LABEL>*> heads = GetHeads();
+      for(auto head : heads){
+        GetNodeListRec(head, &answer);
+      }
+      return answer;
+    }
+    
+    std::vector<DATA*> GetDataList(){
+      std::vector<DATA*> answer;
+      auto nodes = GetNodeList();
+      for(auto node : nodes){
+        answer.push_back( node->GetData() );
+      }
+      return answer;
     }
   };
   
