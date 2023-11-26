@@ -5,23 +5,27 @@
 
 #include "pmlib_math_consts.hh"
 
-#include <ostream>
+#ifndef CERN_ROOT
+  #include <string>
+  #include <ostream>
+#endif
 
 namespace pm {
   
-  class v3;
+  template<typename T = float> class v3;
   // ======= v2 =====================================================================================================
+  template<typename T = float>
   class v2 {
     public:
-    v2(float xx = 0., float yy = 0., float zz = 0.):x(xx),y(yy),z(zz){};
+    v2(T xx = 0., T yy = 0., T zz = 0.) : x(xx),y(yy),z(zz) {};
     v2 Rotate(float angle){
       float c = cos(angle); 
       float s = sin(angle);
       return  v2( x * c - y * s, x * s + y * c);
     }
     inline v2 Rotated(float angle){return Rotate(angle * PI_180);}
-    inline float L(){return sqrt(x*x + y*y);}
-    inline float L2(){return x*x + y*y;}
+    inline T L(){return sqrt(x*x + y*y);}
+    inline T L2(){return x*x + y*y;}
     inline float Angle(){return (y > 0 ? acos(x / (L()+OSML) ) : PI - acos(x / (L()+OSML) ));}
     inline float Angled(){return IP_081 * (y > 0 ? acos(x / (L()+OSML) ) : 2*PI - acos(x / (L()+OSML) ));}
     inline v2 Set(const v2 & v){x = v.x; y = v.y; return *this;}
@@ -29,32 +33,38 @@ namespace pm {
     v2 & operator *= (float value){x *= value; y *= value; return *this;}
     v2 & operator /= (float value){x /= value; y /= value; return *this;}
     v2 & operator += (const v2 & v){x += v.x; y += v.y; return *this;}
-    v2 & operator += (const v3 & v);
+    v2 & operator += (const v3<T> & v);
     v2 & operator -= (const v2 & v){x -= v.x; y -= v.y; return *this;}
     v2 & operator *= (const v2 & v){x *= v.x; y *= v.y; return *this;}
     v2 & operator /= (const v2 & v){x /= v.x; y /= v.y; return *this;}
     v2 operator - () const {return v2(-x, -y);}
 
-    float x, y, z;
+    T x, y, z;
   };
 
-  v2 operator + (v2 va, v2 vb){return v2(va.x + vb.x, va.y + vb.y);}
-  v2 operator - (v2 va, v2 vb){return v2(va.x - vb.x, va.y - vb.y);}
-  v2 operator * (float value, v2 v){return v2(v.x*value, v.y*value);}
-  v2 operator * (v2 v, float value){return v2(v.x*value, v.y*value);}
-  v2 operator * (v2 va, v2 vb){return v2(va.x * vb.x, va.y * vb.y);}
-  v2 operator / (v2 v, float value){return v2(v.x/value, v.y/value);}
-  v2 operator / (v2 va, v2 vb){return v2(va.x / vb.x, va.y / vb.y);}
-  bool operator == (v2 va, v2 vb){return ((va.x == vb.x) and (va.y == vb.y));}
-  bool operator != (v2 va, v2 vb){return ((va.x != vb.x) or (va.y != vb.y));}
+  template<typename T = float> v2<T> operator + (v2<T> va, v2<T> vb){return v2<T>(va.x + vb.x, va.y + vb.y);}
+  template<typename T = float> v2<T> operator - (v2<T> va, v2<T> vb){return v2<T>(va.x - vb.x, va.y - vb.y);}
+  template<typename T = float> v2<T> operator * (float value, v2<T> v){return v2<T>(v.x*value, v.y*value);}
+  template<typename T = float> v2<T> operator * (v2<T> v, float value){return v2<T>(v.x*value, v.y*value);}
+  template<typename T = float> v2<T> operator * (v2<T> va, v2<T> vb){return v2<T>(va.x * vb.x, va.y * vb.y);}
+  template<typename T = float> v2<T> operator / (v2<T> v, float value){return v2<T>(v.x/value, v.y/value);}
+  template<typename T = float> v2<T> operator / (v2<T> va, v2<T> vb){return v2<T>(va.x / vb.x, va.y / vb.y);}
+  template<typename T = float> bool operator == (v2<T> va, v2<T> vb){return ((va.x == vb.x) and (va.y == vb.y));}
+  template<typename T = float> bool operator != (v2<T> va, v2<T> vb){return ((va.x != vb.x) or (va.y != vb.y));}
+  template<typename T = float> std::ostream & operator << (std::ostream & out, v2<T> v){return out << "v2(" << v.x << "," << v.y << ")";}
 
-  std::ostream & operator << (std::ostream & out, v2 v){return out << "v2(" << v.x << "," << v.y << ")";}
+  using v2c = v2<char>;
+  using v2i = v2<int>;
+  using v2s = v2<size_t>;
+  using v2f = v2<float>;
+  using v2d = v2<double>;
 
   // ======= v3 =====================================================================================================
+  template<typename T>
   class v3 {
     public:
-    v3(float xx = 0., float yy = 0., float zz = 0.):x(xx),y(yy),z(zz){};
-    v3(v2 v):x(v.x),y(v.y),z(v.z){};
+    v3(T xx = 0., T yy = 0., T zz = 0.):x(xx),y(yy),z(zz){};
+    v3(v2<T> v):x(v.x),y(v.y),z(v.z){};
     inline v3 Rotate(float angle, int axis){
       if(axis==0){
         v2 yz = v2(y, z).Rotate(angle);
@@ -84,34 +94,34 @@ namespace pm {
     inline float L(){return sqrt(x*x + y*y + z*z);}
     inline float L2(){return x*x + y*y + z*z;}
 
-    float x, y, z;
+    T x, y, z;
 
     v3 & operator *= (float value){x *= value; y *= value; z *= value; return *this;}
     v3 & operator /= (float value){x /= value; y /= value; z /= value; return *this;}
     v3 & operator += (const v3 & v){x += v.x; y += v.y; z += v.z; return *this;}
-    v3 & operator += (const v2 & v){x += v.x; y += v.y; return *this;}
+    v3 & operator += (const v2<T> & v){x += v.x; y += v.y; return *this;}
     v3 & operator -= (const v3 & v){x -= v.x; y -= v.y; z -= v.z; return *this;}
     v3 & operator *= (const v3 & v){x *= v.x; y *= v.y; z *= v.z; return *this;}
     v3 & operator /= (const v3 & v){x /= v.x; y /= v.y; z /= v.z; return *this;}
     v3 operator - () const {return v3(-x, -y, -z);}
   };
 
-  v3 operator + (v3 va, v3 vb){return v3(va.x + vb.x, va.y + vb.y, va.z + vb.z);}
-  v3 operator - (v3 va, v3 vb){return v3(va.x - vb.x, va.y - vb.y, va.z - vb.z);}
-  v3 operator * (float value, v3 v){return v3(v.x*value, v.y*value, v.z*value);}
-  v3 operator * (v3 v, float value){return v3(v.x*value, v.y*value, v.z*value);}
-  v3 operator * (v3 va, v3 vb){return v3(va.x * vb.x, va.y * vb.y, va.z * vb.z);}
-  v3 operator / (v3 v, float value){return v3(v.x/value, v.y/value, v.z/value);}
-  v3 operator / (v3 va, v3 vb){return v3(va.x / vb.x, va.y / vb.y, va.z / vb.z);}
+  template<typename T = float> v3<T> operator + (v3<T> va, v3<T> vb){return v3(va.x + vb.x, va.y + vb.y, va.z + vb.z);}
+  template<typename T = float> v3<T> operator - (v3<T> va, v3<T> vb){return v3(va.x - vb.x, va.y - vb.y, va.z - vb.z);}
+  template<typename T = float> v3<T> operator * (float value, v3<T> v){return v3(v.x*value, v.y*value, v.z*value);}
+  template<typename T = float> v3<T> operator * (v3<T> v, float value){return v3(v.x*value, v.y*value, v.z*value);}
+  template<typename T = float> v3<T> operator * (v3<T> va, v3<T> vb){return v3(va.x * vb.x, va.y * vb.y, va.z * vb.z);}
+  template<typename T = float> v3<T> operator / (v3<T> v, float value){return v3(v.x/value, v.y/value, v.z/value);}
+  template<typename T = float> v3<T> operator / (v3<T> va, v3<T> vb){return v3(va.x / vb.x, va.y / vb.y, va.z / vb.z);}
 
-  bool operator == (v3 va, v3 vb){return ((va.x == vb.x) and (va.y == vb.y) and (va.z == vb.z));}
-  bool operator != (v3 va, v3 vb){return ((va.x != vb.x) or (va.y != vb.y) or (va.z != vb.z));}
+  template<typename T = float> bool operator == (v3<T> va, v3<T> vb){return ((va.x == vb.x) and (va.y == vb.y) and (va.z == vb.z));}
+  template<typename T = float> bool operator != (v3<T> va, v3<T> vb){return ((va.x != vb.x) or (va.y != vb.y) or (va.z != vb.z));}
 
-  std::ostream & operator << (std::ostream & out, v3 v){return out << "v3(" << v.x << "," << v.y << "," << v.z << ")";};
+  template<typename T = float> std::ostream & operator << (std::ostream & out, v3<T> v){return out << "v3(" << v.x << "," << v.y << "," << v.z << ")";};
 
-  v3 operator + (const v3 & va, const v2 & vb){return v3(va.x + vb.x, va.y + vb.y);}
-  v2 operator + (const v2 & va, const v3 & vb){return v2(va.x + vb.x, va.y + vb.y);}
-  v2 & v2::operator += (const v3 & v){x += v.x; y += v.y; return *this;}
+  template<typename T = float> v3<T> operator + (const v3<T> & va, const v2<T> & vb){return v3(va.x + vb.x, va.y + vb.y);}
+  template<typename T = float> v2<T> operator + (const v2<T> & va, const v3<T> & vb){return v2(va.x + vb.x, va.y + vb.y);}
+  template<typename T> v2<T> & v2<T>::operator += (const v3<T> & v){x += v.x; y += v.y; return *this;}
 
   // ======= rgb ====================================================================
   class rgb {

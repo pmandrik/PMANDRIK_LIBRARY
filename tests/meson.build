@@ -9,5 +9,5 @@ add_project_arguments('-DNO_CERN_ROOT=1', language : 'cpp')
 
 incdir = include_directories('../')
 
-executable('test_trees', '../tests/test_trees.cpp', include_directories : incdir, link_args : '-Wunused-variable')
-
+executable('test_trees', '../tests/test_trees.cpp', include_directories : incdir, link_args : '-Wunused-variable', cpp_args : '-Wfatal-errors')
+executable('test_drawer', '../tests/test_drawer.cpp', include_directories : incdir, link_args : '-Wunused-variable', cpp_args : '-Wfatal-errors')
