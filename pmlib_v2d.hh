@@ -58,6 +58,7 @@ namespace pm {
   using v2s = v2<size_t>;
   using v2f = v2<float>;
   using v2d = v2<double>;
+  using v2b = v2<bool>;
 
   // ======= v3 =====================================================================================================
   template<typename T>
@@ -155,8 +156,24 @@ namespace pm {
   rgb operator / (rgb va, rgb vb){return rgb(va.r / vb.r, va.g / vb.g, va.b / vb.b);}
 
   std::ostream & operator << (std::ostream & out, rgb v){return out << " rgb( " << v.r << ", " << v.g << ", " << v.b << ", " << v.a << " ) ";};
-}
 
+  // ======= rgb ====================================================================
+  template<typename T = float>
+  class Rect {
+    public:
+    /// rectangular box
+    Rect(float x_min_, float y_min_, float x_max_, float y_max_, float angle_ = 0){
+      x_min = x_min_; x_max = x_max_; y_min = y_min_; y_max = y_max_;
+    }
+    
+    v2<T> GetCenter() const { return v2<T>(x_max/2 + x_min/2, y_max/2 + y_min/2); }
+    v2<T> GetSize() const { return v2<T>(x_max-x_min,y_max-y_min); }
+    bool Contain(const v2<T> & pos) const { return is_point_in_box(pos, GetCenter(), GetSize(), angle); }
+    float x_min, x_max, y_min, y_max;
+    float angle;
+  };
+
+}
 #endif
 
 

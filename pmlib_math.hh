@@ -60,7 +60,7 @@ namespace pm {
       x_min = x_min_; x_max = x_max_; y_min = y_min_; y_max = y_max_;
     }
     
-    v2 GetCenter() const { return v2(x_max*0.5 + x_min*0.5, y_max*0.5 + y_min*0.5); }
+    v2 GetCenter() const { return v2(x_max/2 + x_min/2, y_max/2 + y_min/2); }
     v2 GetSize() const { return v2(x_max-x_min,y_max-y_min); }
     bool Contain(const v2 & pos) const { return is_point_in_box(pos, GetCenter(), GetSize(), angle); }
     float x_min, x_max, y_min, y_max;

@@ -9,6 +9,7 @@
   #include <string>
   #include <algorithm>
   #include <stack>
+  #include <memory>
   
   #include "pmlib_msg.hh"
   #include "pmlib_v2d.hh"
@@ -46,68 +47,68 @@ namespace pm {
   
   // ======= Drawing-related tools ====================================================================
   struct CameraTarget{
-    CameraTarget() : pos(0), time(0), zoom(0), normal(0), max_time(1)  {}
-    CameraTarget(v2 p, int t, float z, v2 n) : pos(p), time(t), zoom(z), normal(n), max_time(t)  {}
+    CameraTarget() : pos(0.f), time(0), zoom(0), normal(0.f), max_time(1)  {}
+    CameraTarget(v2f p, int t, float z, v2f n) : pos(p), time(t), zoom(z), normal(n), max_time(t)  {}
 
     void Tick( float mval ){
       float val = mval * (time / (float) max_time);
       pos *= val;
       zoom *= val;
       normal *= val;
-      time = max(0, time-1);
+      time = std::max(0, time-1);
     }
 
-    v2 pos;
+    v2f pos;
     int time;
-    int max_time;
     float zoom;
-    v2 normal;
+    v2f normal;
+    int max_time;
   };
   
   class Camera {
     // TODO rewrite this
     public:
-      inline void Resize( const int & r){ zoom = max(0.000000001, zoom - 0.1*r*zoom); }
+      inline void Resize( const int & r){ zoom = std::max(0.000000001, zoom - 0.1*r*zoom); }
       inline void ResetZoom(){ zoom = 1.; }
       void Reset(){
-        to = v2(0, 0, 0);
-        from = v2(0, 0, 1);
-        normal = v2(0, 1, 0);
+        to = v2(0.f, 0.f, 0.f);
+        from = v2(0.f, 0.f, 1.f);
+        normal = v2(0.f, 1.f, 0.f);
         zoom = 1;
-        buffer = drawing::z_buffer;
+        // buffer = drawing::z_buffer; TODO
         pause = true;
         smooth = false;
         angleZ = 0.;
       }
 
-      void SetTarget(v2 target){
+      void SetViewVec(v2f target){
         to.Set(target);
         from.Set(target);
       }
 
-      void SetTarget(v2 target, float z, v2 norm){
-        SetTarget(target);
+      void SetViewVec(v2f target, float z, v2f norm){
+        SetViewVec(target);
         zoom = z;
         normal = norm;
       }
 
-      void Move(v2 shift){
+      void Move(v2f shift){
         to += shift;
         from += shift;
       }
-      virtual void SetScreenTarget(){}
-      virtual void SetDraweTarget(){}
-      void PushPoint(v2 pos, int time, float zoom, v2 normal = v2(0,1)){
+
+      void PushPoint(v2f pos, int time, float zoom, v2f normal = v2(0.f,1.f)){
         targets.push_back( CameraTarget(pos, time, zoom, normal) );
       }
 
-      v2 AbsToScreen(int x, int y, bool flip_y = true){ return -to + v2(x - drawing::WW2, (-y + drawing::WH2) * (-1 + 2 * flip_y) ) * zoom; }
-      v2 AbsToScreen(v2 pos,       bool flip_y = true){ return -to + v2(pos.x - drawing::WW2, (-pos.y + drawing::WH2) * (-1 + 2 * flip_y) ) * zoom; }
+      v2f AbsToScreen(int x, int y, bool flip_y = true){ return -to + v2f(x - drawing::WW2, (-y + drawing::WH2) * (-1 + 2 * flip_y) ) * zoom; }
+      v2f AbsToScreen(v2f pos,       bool flip_y = true){ return -to + v2f(pos.x - drawing::WW2, (-pos.y + drawing::WH2) * (-1 + 2 * flip_y) ) * zoom; }
 
       float GetPhi(){ return normal.Angle(); }
       bool Finished(){ return not targets.size(); }
       void Print(){ msg(to, zoom, normal); }
       
+      virtual ~Camera(){}
       virtual void SetScreenTarget(){}
       virtual void SetDraweTarget(){}
       virtual void ReTick(){}
@@ -115,10 +116,10 @@ namespace pm {
       virtual void LoadDefault(){}
       virtual void Tick(){}
 
-      v2 to, from, normal; 
-      CameraTarget inertia;
+      v2f to, from, normal; 
       float zoom, buffer, angleZ;
-      vector<CameraTarget> targets;
+      std::vector<CameraTarget> targets;
+      CameraTarget target;
       bool pause, smooth;
   };
 
@@ -126,7 +127,7 @@ namespace pm {
   /// Texture is a wrapper around image, registered at the GPU Device space side
   struct TexTile {
     /// TexTile store the info about position & size of part of image in Texture normalized to 1. space
-    /// and original position & size of 
+    /// and original position & size of Image
     TexTile() {}
     TexTile(v2f p, v2f s) : pos(p), size(s) {
 		  tsize = v2f(1,1);
@@ -164,7 +165,7 @@ namespace pm {
   };
   
   class Texture {
-    /// Texture is wraped around Image and know how to draw it.
+    /// Texture is wraped around Image's data and know how to draw it.
     public:
     Texture(size_t width, size_t height, size_t format, size_t type, const void * data){
       size = v2f(width, height);
@@ -295,7 +296,7 @@ namespace pm {
 
       void Move(const int & id, const v2f & shift){
         for(int i = id; i < id+drawing::QUAD_ARRAY_SIZE; i+=drawing::VERTEX_ARRAY_SIZE){
-          this->data    public :[i+0] += shift.x;
+          this->data[i+0] += shift.x;
 		      this->data[i+1] += shift.y;
         }
       }
@@ -369,6 +370,7 @@ namespace pm {
     /// then pass data to the Device to actual draw, later unbind target if needed 
       int target_id;
     public :
+      virtual ~Drawer(){}
       //! Drawable Object need to sync with Drawer 
       //!   -> Drawer store Drawable data and provide interface for Drawable Object
       //!   -> use interface of internal data holder
@@ -381,7 +383,7 @@ namespace pm {
     
       //! Target for drawer is binded by central DrawSystem 
       //!   -> Drawer store Target reference
-      int SetTarget(int target_id){ this->target_id = target_id; } 
+      void SetTarget(int target_id){ this->target_id = target_id; } 
       int GetTarget(){ return this->target_id; }
       
       //! Drawer get Drawable data and pass to the Drawing Low level implementations to pass to the Device
@@ -403,7 +405,7 @@ namespace pm {
       }
   };
   
-  class DrawableQuad : public DrawableObjects {
+  class DrawableQuad {
       /// DrawableQuad is defined by pos (x,y,z), size (w,h), angle. We also have boolean to flip/mirror it over x, y axis.
       /// Thus, DrawableQuad is actually a 2D Quad.
       /// Finally, what we actually draw is Texture (OpenGL) defined by TexTile object (relative coordinates in texture).
@@ -411,11 +413,11 @@ namespace pm {
       /// Drawer child classes where we implements how we draw this.
       
       public:
-        DrawableQuad(v2 pos_, v2 size_, v2 flip_, float angle_, TexTile * ttile_){
+        DrawableQuad(v2f pos_, v2f size_, v2b flip_, float angle_, TexTile * ttile_){
           Set(pos_, size_, flip_, angle_, ttile_);
         }
 
-        void Set(v2 pos_, v2 size_, v2 flip_, float angle_, TexTile * ttile_){
+        void Set(v2f pos_, v2f size_, v2b flip_, float angle_, TexTile * ttile_){
           pos = pos_;
           size = size_;
           flip = flip_;
@@ -424,17 +426,116 @@ namespace pm {
         }
 
         float angle;
-        v2 pos, size, flip;
+        v2f pos, size;
+        v2b flip;
         TexTile * ttile;
+  };
+  
+  // Shader change drawing rule using Device
+  class ShaderImp {
+    public:
+    virtual ~ShaderImp(){};
+    //! load vertex shader from std::string
+    virtual void LoadFromStringVert( const std::string & text) = 0;
+    //! load fragment shader  from std::string
+    virtual void LoadFromStringFrag( const std::string & text) = 0;
+    //! create shader program
+    virtual void CreateProgram() = 0;
+
+    //! add unifrom with name to shader
+    virtual void AddUniform(const std::string name) = 0;
+    //! return uniform id
+    virtual int  GetUniform(const std::string name) = 0;
+
+    virtual void Bind() = 0;
+    virtual void Unbind() = 0;
+
+    //! update float unifrom value
+    virtual void UpdateUniform1f(const std::string & name, const float & val) = 0;
+
+    //! tell that some binded texture will be used under the 'name'
+    virtual void UpdateUniformTexture(int index, const std::string & name) = 0;
+
+    std::string shader_name;
+  };
+
+  class Shader {
+    public:
+    std::shared_ptr<ShaderImp> shader_imp;
+
+    virtual ~Shader(){};
+    void Bind() { shader_imp->Bind(); } 
+    void Unbind() { shader_imp->Unbind(); } 
+    virtual void SetupDraw(){
+      /// extra prepare function before draw
+    };
+
+    void LoadFromStringVert( const std::string text){ shader_imp->LoadFromStringVert( text ); } 
+    void LoadFromStringFrag( const std::string text){ shader_imp->LoadFromStringFrag(  text ); } 
+
+    void CreateProgram(){ shader_imp->CreateProgram(); };
+
+    void UpdateUniform1f(const std::string id, const float val){ shader_imp->UpdateUniform1f(id, val); } 
+    void UpdateUniformTexture(int index, const std::string id){ shader_imp->UpdateUniformTexture(index, id); } 
+
+    /*
+    virtual void Load(std::string path_vert_, std::string path_frag_){
+      path_vert = path_vert_;
+      path_frag = path_frag_;
+
+      // MSG_INFO( __PFN__, sys::file_input, path_vert, path_frag );
+      std::string vert_txt = sys::file_input->read_text_files( path_vert );
+      std::string frag_txt = sys::file_input->read_text_files( path_frag );
+
+      // MSG_INFO( vert_txt );
+      // MSG_INFO( frag_txt );
+
+      ltrim(vert_txt);
+      ltrim(frag_txt);
+      rtrim(vert_txt);
+      rtrim(frag_txt);
+
+      LoadFromStringVert( vert_txt );
+      LoadFromStringFrag( frag_txt );
+      CreateProgram();
+    }
+    */
+
+    std::string path_vert, path_frag;
+    bool first_run = true;
+  };
+  
+  // Canvas where to draw
+  class Canvas {
+    /// is like a frame buffer which is a texture + depth buffer stored at GPU and with fast GPU access
+    public:
+      virtual ~Canvas() = default;
+      
+      //! set this buffer as target
+      virtual void Target()  { }
+
+      //! unset this buffer as target
+      virtual void Untarget(){ }
+
+      //! fill buffer with some 0 data
+      virtual void Clear(){ }
+
+      //! same as Clear
+      virtual void Clean(){ Clear(); };
+
+      //! bind frame buffer texture, so can be used to draw
+      virtual void Bind(const int & index){}
+
+      //! unbind frame buffer texture
+      virtual void Unbind(const int & index){}
   };
   
   // DrawSystem
   class DrawSystem {
     public:
-    
       std::vector< std::shared_ptr<Drawer> > drawers;
       std::vector<int> drawers_order;
-      std::vector<int> targets;
+      std::vector< std::shared_ptr<Canvas> > targets;
       int target_id;
       std::shared_ptr<Camera> camera;
       
@@ -442,7 +543,7 @@ namespace pm {
       void ChangeTarget(int target_id_new){
         if( target_id == target_id_new ) return;
         auto target_old = targets[target_id];
-        target_old->Unbind();
+        target_old->Untarget();
         
         if( target_id_new == drawing::TARGET_SCREEN_ID ) {
           // screen
@@ -450,18 +551,19 @@ namespace pm {
           return;
         }
         auto target_new = targets[target_id_new];
-        target_new->Bind();
-        camera->SetTarget( target_new );
+        target_new->Target();
+        // camera->SetTarget( target_new ); TODO
         
         target_id = target_id_new;
       }
       
       void Draw(){
-        //! 
+        /// iterates over [Drawer] in right order and call Draw() function
         for(int i = 0, i_max = drawers_order.size(); i < i_max; ++i){
           int index = drawers_order[i];
           std::shared_ptr<Drawer> drawer = drawers[index];
           
+          /// DrawSystem get targets from Drawer and Bind() it first
           int target_id_new = drawer->GetTarget();
           // change target
           ChangeTarget( target_id_new );
@@ -471,10 +573,7 @@ namespace pm {
       }
   };
   
-  /// DrawSystem iterates over [Drawer] in right order and call Draw() function
-  /// DrawSystem get targets from Drawer and Bind() it first
-  /// DrawSystem blit final Drawers to the Screen
-  /// 
+  
 };
 
 #endif
